@@ -13,11 +13,12 @@ type Config struct {
 }
 
 type postgresConfig struct {
-	User     string `env:"POSTGRES_USERNAME"`
-	Password string `env:"POSTGRES_PASSWORD"`
-	Host     string `env:"POSTGRES_HOST"`
-	Port     int    `env:"POSTGRES_PORT"`
-	DB       string `env:"POSTGRES_DB"`
+	User      string `env:"POSTGRES_USERNAME"`
+	Password  string `env:"POSTGRES_PASSWORD"`
+	Host      string `env:"POSTGRES_HOST"`
+	Port      int    `env:"POSTGRES_PORT"`
+	DB        string `env:"POSTGRES_DB"`
+	PoolConns int    `env:"POSTGRES_POOL_CONnS"`
 }
 
 type redisConfig struct {

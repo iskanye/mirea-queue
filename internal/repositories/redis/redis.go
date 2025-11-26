@@ -33,3 +33,7 @@ func New(cfg config.Config) (*Storage, error) {
 		cl: client,
 	}, nil
 }
+
+func (s *Storage) Close() error {
+	return s.cl.Close()
+}

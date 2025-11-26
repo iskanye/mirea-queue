@@ -1,9 +1,18 @@
 package interfaces
 
-import "github.com/iskanye/mirea-queue/internal/models"
+import (
+	"context"
+
+	"github.com/iskanye/mirea-queue/internal/models"
+)
 
 type Queue interface {
-	Push(entry models.QueueEntry) error
-	Pop() (models.QueueEntry, error)
-	Clear() error
+	Push(
+		ctx context.Context,
+		entry models.QueueEntry,
+	) error
+
+	Pop(ctx context.Context) (models.QueueEntry, error)
+
+	Clear(ctx context.Context) error
 }
