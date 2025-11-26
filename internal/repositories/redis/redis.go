@@ -2,9 +2,9 @@ package redis
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/config"
-	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -26,7 +26,7 @@ func New(cfg config.Config) (*Storage, error) {
 	// Проверяем подключение к Redis
 	err := client.Ping(context.Background()).Err()
 	if err != nil {
-		return nil, errors.Wrap(err, op)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return &Storage{

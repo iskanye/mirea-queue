@@ -6,7 +6,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.5.4
-	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.17.1
 )
 
