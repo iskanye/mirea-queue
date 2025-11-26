@@ -19,4 +19,6 @@ func main() {
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	<-stop
+
+	app.Stop()
 }

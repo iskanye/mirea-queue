@@ -8,3 +8,6 @@ func New() *App {
 
 func (App) MustRun() {
 }
+
+func (App) Stop() {
+}
