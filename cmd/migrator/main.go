@@ -44,12 +44,11 @@ func main() {
 }
 
 func mustMigrate(err error) {
+	if errors.Is(err, migrate.ErrNoChange) {
+		fmt.Println("no migrations to apply")
+		return
+	}
 	if err != nil {
-		if errors.Is(err, migrate.ErrNoChange) {
-			fmt.Println("no migrations to apply")
-			return
-		}
-
 		panic(err)
 	}
 
