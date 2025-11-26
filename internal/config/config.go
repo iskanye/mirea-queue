@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Token    string
+	Token    string `env:"BOT_TOKEN"`
 	Postgres postgresConfig
 	Redis    redisConfig
 }
@@ -17,15 +17,13 @@ type postgresConfig struct {
 	Password string `env:"POSTGRES_PASSWORD"`
 	Host     string `env:"POSTGRES_HOST"`
 	Port     int    `env:"POSTGRES_PORT"`
-	DBName   string `env:"POSTGRES_DB"`
+	DB       string `env:"POSTGRES_DB"`
 }
 
 type redisConfig struct {
 	User     string        `env:"REDIS_USER"`
 	Password string        `env:"REDIS_PASSWORD"`
-	Host     string        `env:"REDIS_HOST"`
-	Port     int           `env:"REDIS_PORT"`
-	DBName   string        `env:"REDIS_DB"`
+	Addr     string        `env:"REDIS_ADDR"`
 	Timeout  time.Duration `env:"REDIS_TIMEOUT"`
 }
 

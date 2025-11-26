@@ -25,7 +25,7 @@ func main() {
 		cfg.Postgres.Password,
 		cfg.Postgres.Host,
 		cfg.Postgres.Port,
-		cfg.Postgres.DBName,
+		cfg.Postgres.DB,
 	)
 
 	if migrationsPath == "" {
