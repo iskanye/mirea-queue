@@ -13,7 +13,7 @@ type Storage struct {
 }
 
 func New(cfg config.Config) (*Storage, error) {
-	const op = "repositories.postgres.New"
+	const op = "postgres.New"
 
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable&pool_max_conns=%d",

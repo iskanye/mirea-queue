@@ -1,3 +1,7 @@
 package models
 
-type User struct{}
+type User struct {
+	Name        string
+	Group       string
+	QueueAccess bool
+}

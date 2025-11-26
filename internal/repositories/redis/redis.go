@@ -13,7 +13,7 @@ type Storage struct {
 }
 
 func New(cfg config.Config) (*Storage, error) {
-	const op = "repositories.redis.New"
+	const op = "redis.New"
 
 	client := redis.NewClient(&redis.Options{
 		Addr:         cfg.Redis.Addr,
