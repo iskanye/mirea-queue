@@ -9,10 +9,16 @@ import (
 type Queue interface {
 	Push(
 		ctx context.Context,
+		queue models.Queue,
 		entry models.QueueEntry,
 	) error
-
-	Pop(ctx context.Context) (models.QueueEntry, error)
-
-	Clear(ctx context.Context) error
+	Pop(
+		ctx context.Context,
+		queue models.Queue,
+	) (models.QueueEntry, error)
+	Clear(
+		ctx context.Context,
+		queue models.Queue,
+		key string,
+	) error
 }

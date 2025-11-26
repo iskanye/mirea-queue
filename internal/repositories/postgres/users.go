@@ -2,9 +2,11 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/jackc/pgx/v5"
 )
 
 func (s *Storage) CreateUser(
@@ -147,6 +149,10 @@ func (s *Storage) GetUser(
 	var user models.User
 	err := getUser.Scan(&user.Name, &user.Group, &user.QueueAccess)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrNotFound)
+		}
+
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
