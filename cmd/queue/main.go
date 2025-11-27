@@ -1,18 +1,23 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/iskanye/mirea-queue/internal/app"
+	"github.com/iskanye/mirea-queue/internal/config"
 )
 
 func main() {
-	app := app.New()
+	cfg := config.MustLoadConfig()
+	log := slog.Default()
+
+	app := app.New(log, cfg)
 
 	go func() {
-		app.MustRun()
+		app.Run()
 	}()
 
 	stop := make(chan os.Signal, 1)

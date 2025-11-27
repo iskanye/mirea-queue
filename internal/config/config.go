@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Token    string `env:"BOT_TOKEN"`
-	Postgres postgresConfig
-	Redis    redisConfig
+	Token      string        `env:"BOT_TOKEN"`
+	BotTimeout time.Duration `env:"BOT_TIMEOUT"`
+	Postgres   postgresConfig
+	Redis      redisConfig
 }
 
 type postgresConfig struct {
