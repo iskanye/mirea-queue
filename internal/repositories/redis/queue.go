@@ -14,9 +14,7 @@ func (s *Storage) Push(
 ) error {
 	const op = "redis.Push"
 
-	queueKey := fmt.Sprintf("%s:%s", queue.Group, queue.Subject)
-
-	_, err := s.cl.LPush(ctx, queueKey, entry.Student).Result()
+	_, err := s.cl.LPush(ctx, queue.Key(), entry.Student).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -30,9 +28,7 @@ func (s *Storage) Pop(
 ) (models.QueueEntry, error) {
 	const op = "redis.Pop"
 
-	queueKey := fmt.Sprintf("%s:%s", queue.Group, queue.Subject)
-
-	student, err := s.cl.LPop(ctx, queueKey).Result()
+	student, err := s.cl.LPop(ctx, queue.Key()).Result()
 	if err != nil {
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -48,9 +44,7 @@ func (s *Storage) Clear(
 ) error {
 	const op = "redis.Pop"
 
-	queueKey := fmt.Sprintf("%s:%s", queue.Group, queue.Subject)
-
-	_, err := s.cl.Del(ctx, queueKey).Result()
+	_, err := s.cl.Del(ctx, queue.Key()).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
