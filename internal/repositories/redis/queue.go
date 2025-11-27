@@ -28,7 +28,7 @@ func (s *Storage) Pop(
 ) (models.QueueEntry, error) {
 	const op = "redis.Pop"
 
-	student, err := s.cl.LPop(ctx, queue.Key()).Result()
+	student, err := s.cl.RPop(ctx, queue.Key()).Result()
 	if err != nil {
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -36,6 +36,28 @@ func (s *Storage) Pop(
 	return models.QueueEntry{
 		Student: student,
 	}, nil
+}
+
+func (s *Storage) Range(
+	ctx context.Context,
+	queue models.Queue,
+	n int64,
+) ([]models.QueueEntry, error) {
+	const op = "redis.Range"
+
+	students, err := s.cl.LRange(ctx, queue.Key(), -n, -1).Result()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	entries := make([]models.QueueEntry, 0, n)
+	for _, student := range students {
+		entries = append(entries, models.QueueEntry{
+			Student: student,
+		})
+	}
+
+	return entries, nil
 }
 
 func (s *Storage) Clear(

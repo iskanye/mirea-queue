@@ -22,3 +22,11 @@ type Queue interface {
 		key string,
 	) error
 }
+
+type QueueViewer interface {
+	Range(
+		ctx context.Context,
+		queue models.Queue,
+		n int,
+	) ([]models.QueueEntry, error)
+}
