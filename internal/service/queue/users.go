@@ -8,7 +8,7 @@ import (
 	"github.com/iskanye/mirea-queue/internal/models"
 )
 
-func (q *Queue) NewUser(
+func (q *QueueService) NewUser(
 	ctx context.Context,
 	chatID int64,
 	user models.User,

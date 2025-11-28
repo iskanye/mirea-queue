@@ -6,7 +6,7 @@ import (
 	"github.com/iskanye/mirea-queue/internal/interfaces"
 )
 
-type Queue struct {
+type QueueService struct {
 	log *slog.Logger
 
 	queue       interfaces.Queue
@@ -26,8 +26,8 @@ func New(
 	userRemover interfaces.UserRemover,
 	userModifier interfaces.UserModifier,
 	userProvider interfaces.UserProvider,
-) *Queue {
-	return &Queue{
+) *QueueService {
+	return &QueueService{
 		log: log,
 
 		queue:       queue,
