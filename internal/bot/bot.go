@@ -26,6 +26,7 @@ func New(cfg *config.Config) *Bot {
 }
 
 func (b *Bot) Start() {
+	b.registerHandlers()
 	b.b.Start()
 }
 
