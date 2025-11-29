@@ -36,11 +36,11 @@ func New(
 	}
 }
 
-func (q *Users) NewUser(
+func (q *Users) CreateUser(
 	ctx context.Context,
 	chatID int64,
 	user models.User,
-) error {
+) (models.User, error) {
 	const op = "NewUser"
 
 	log := q.log.With(
@@ -53,10 +53,26 @@ func (q *Users) NewUser(
 	err := q.userCreator.CreateUser(ctx, chatID, user)
 	if err != nil {
 		log.Error("Failed to create user")
-		return fmt.Errorf("%s: %w", op, err)
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("Successfully created new user")
 
-	return nil
+	return user, nil
 }
+
+func (q *Users) RemoveUser(
+	ctx context.Context,
+	chatID int64,
+) error
+
+func (q *Users) UpdateUser(
+	ctx context.Context,
+	chatID int64,
+	user models.User,
+) (models.User, error)
+
+func (q *Users) GetUser(
+	ctx context.Context,
+	chatID int64,
+) (models.User, error)

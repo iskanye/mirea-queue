@@ -12,7 +12,7 @@ type Storage struct {
 	cl *redis.Client
 }
 
-func New(cfg config.Config) (*Storage, error) {
+func New(cfg *config.Config) (*Storage, error) {
 	const op = "redis.New"
 
 	client := redis.NewClient(&redis.Options{

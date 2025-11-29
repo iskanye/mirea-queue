@@ -19,7 +19,6 @@ type Queue interface {
 	Clear(
 		ctx context.Context,
 		queue models.Queue,
-		key string,
 	) error
 }
 
@@ -27,7 +26,7 @@ type QueueViewer interface {
 	Range(
 		ctx context.Context,
 		queue models.Queue,
-		n int,
+		n int64,
 	) ([]models.QueueEntry, error)
 }
 

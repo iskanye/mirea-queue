@@ -12,7 +12,7 @@ type Storage struct {
 	pool *pgxpool.Pool
 }
 
-func New(cfg config.Config) (*Storage, error) {
+func New(cfg *config.Config) (*Storage, error) {
 	const op = "postgres.New"
 
 	connStr := fmt.Sprintf(

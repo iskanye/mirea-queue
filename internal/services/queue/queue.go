@@ -12,6 +12,8 @@ import (
 type Queue struct {
 	log *slog.Logger
 
+	queueRange int64
+
 	queue       interfaces.Queue
 	queueViewer interfaces.QueueViewer
 }
@@ -24,6 +26,8 @@ func New(
 	return &Queue{
 		log: log,
 
+		queueRange: 10,
+
 		queue:       queue,
 		queueViewer: queueViewer,
 	}
@@ -33,7 +37,7 @@ func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) error {
+) ([]models.QueueEntry, error) {
 	const op = "Push"
 
 	log := q.log.With(
@@ -47,10 +51,33 @@ func (q *Queue) Push(
 	err := q.queue.Push(ctx, queue, entry)
 	if err != nil {
 		log.Error("Failed to create user")
-		return fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	queueEntries, err := q.queueViewer.Range(ctx, queue, q.queueRange)
+	if err != nil {
+		log.Error("Failed to get queue")
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("Successfully pushed")
 
-	return nil
+	return queueEntries, nil
 }
+
+func (q *Queue) Pop(
+	ctx context.Context,
+	queue models.Queue,
+) (models.QueueEntry, []models.QueueEntry, error)
+
+func (q *Queue) Clear(
+	ctx context.Context,
+	queue models.Queue,
+	key string,
+) error
+
+func (q *Queue) GetCurrentPosition(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) (int, []models.QueueEntry, error)

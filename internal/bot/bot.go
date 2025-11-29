@@ -9,12 +9,12 @@ import (
 type Bot struct {
 	b *tele.Bot
 
-	queueService interfaces.QueueService
-	usersService interfaces.UsersService
+	handlers interfaces.BotHandlers
 }
 
 func New(
 	cfg *config.Config,
+	handlers interfaces.BotHandlers,
 ) *Bot {
 	pref := tele.Settings{
 		Token:  cfg.Token,
@@ -27,7 +27,8 @@ func New(
 	}
 
 	return &Bot{
-		b: b,
+		b:        b,
+		handlers: handlers,
 	}
 }
 
@@ -38,4 +39,8 @@ func (b *Bot) Start() {
 
 func (b *Bot) Stop() {
 	b.b.Stop()
+}
+
+func (b *Bot) registerHandlers() {
+	b.b.Handle("/start", b.handlers.Start)
 }
