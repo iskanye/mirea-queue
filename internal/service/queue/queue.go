@@ -5,10 +5,31 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/iskanye/mirea-queue/internal/interfaces"
 	"github.com/iskanye/mirea-queue/internal/models"
 )
 
-func (q *QueueService) Push(
+type Queue struct {
+	log *slog.Logger
+
+	queue       interfaces.Queue
+	queueViewer interfaces.QueueViewer
+}
+
+func New(
+	log *slog.Logger,
+	queue interfaces.Queue,
+	queueViewer interfaces.QueueViewer,
+) *Queue {
+	return &Queue{
+		log: log,
+
+		queue:       queue,
+		queueViewer: queueViewer,
+	}
+}
+
+func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
