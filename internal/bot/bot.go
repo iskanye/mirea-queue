@@ -2,14 +2,20 @@ package bot
 
 import (
 	"github.com/iskanye/mirea-queue/internal/config"
+	"github.com/iskanye/mirea-queue/internal/interfaces"
 	tele "gopkg.in/telebot.v4"
 )
 
 type Bot struct {
 	b *tele.Bot
+
+	queueService interfaces.QueueService
+	usersService interfaces.UsersService
 }
 
-func New(cfg *config.Config) *Bot {
+func New(
+	cfg *config.Config,
+) *Bot {
 	pref := tele.Settings{
 		Token:  cfg.Token,
 		Poller: &tele.LongPoller{Timeout: cfg.BotTimeout},

@@ -30,3 +30,11 @@ type QueueViewer interface {
 		n int,
 	) ([]models.QueueEntry, error)
 }
+
+type QueuePosition interface {
+	GetCurrentPosition(
+		ctx context.Context,
+		queue models.Queue,
+		entry models.QueueEntry,
+	) (int, error)
+}
