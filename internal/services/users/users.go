@@ -64,15 +64,21 @@ func (q *Users) CreateUser(
 func (q *Users) RemoveUser(
 	ctx context.Context,
 	chatID int64,
-) error
+) error {
+	return nil
+}
 
 func (q *Users) UpdateUser(
 	ctx context.Context,
 	chatID int64,
 	user models.User,
-) (models.User, error)
+) (models.User, error) {
+	return models.User{}, nil
+}
 
 func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,
-) (models.User, error)
+) (models.User, error) {
+	return models.User{}, nil
+}

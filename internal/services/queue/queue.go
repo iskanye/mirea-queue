@@ -68,16 +68,22 @@ func (q *Queue) Push(
 func (q *Queue) Pop(
 	ctx context.Context,
 	queue models.Queue,
-) (models.QueueEntry, []models.QueueEntry, error)
+) (models.QueueEntry, []models.QueueEntry, error) {
+	return models.QueueEntry{}, nil, nil
+}
 
 func (q *Queue) Clear(
 	ctx context.Context,
 	queue models.Queue,
 	key string,
-) error
+) error {
+	return nil
+}
 
 func (q *Queue) GetCurrentPosition(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) (int, []models.QueueEntry, error)
+) (int, []models.QueueEntry, error) {
+	return 0, nil, nil
+}
