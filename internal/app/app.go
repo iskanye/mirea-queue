@@ -34,8 +34,10 @@ func New(
 	queue := queue.New(log, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 
-	handlers := botHandlers.New(log, queue, users)
-	bot := bot.New(cfg, handlers)
+	bot, ctx := bot.New(cfg)
+	handlers := botHandlers.New(log, ctx, queue, users)
+
+	bot.RegisterHandlers(handlers)
 
 	return &App{
 		log: log,

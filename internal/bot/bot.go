@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"context"
+
 	"github.com/iskanye/mirea-queue/internal/config"
 	"github.com/iskanye/mirea-queue/internal/interfaces"
 	tele "gopkg.in/telebot.v4"
@@ -9,13 +11,12 @@ import (
 type Bot struct {
 	b *tele.Bot
 
-	handlers interfaces.BotHandlers
+	cancel context.CancelFunc
 }
 
 func New(
 	cfg *config.Config,
-	handlers interfaces.BotHandlers,
-) *Bot {
+) (*Bot, context.Context) {
 	pref := tele.Settings{
 		Token:  cfg.Token,
 		Poller: &tele.LongPoller{Timeout: cfg.BotTimeout},
@@ -26,21 +27,23 @@ func New(
 		panic(err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &Bot{
-		b:        b,
-		handlers: handlers,
-	}
+		b:      b,
+		cancel: cancel,
+	}, ctx
 }
 
 func (b *Bot) Start() {
-	b.registerHandlers()
 	b.b.Start()
 }
 
 func (b *Bot) Stop() {
+	b.cancel()
 	b.b.Stop()
 }
 
-func (b *Bot) registerHandlers() {
-	b.b.Handle("/start", b.handlers.Start)
+func (b *Bot) RegisterHandlers(handlers interfaces.BotHandlers) {
+	b.b.Handle("/start", handlers.Start)
 }
