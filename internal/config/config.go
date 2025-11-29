@@ -14,28 +14,28 @@ type Config struct {
 }
 
 type postgresConfig struct {
-	User      string `env:"POSTGRES_USERNAME"`
+	User      string `env:"POSTGRES_USER"`
 	Password  string `env:"POSTGRES_PASSWORD"`
 	Host      string `env:"POSTGRES_HOST"`
 	Port      int    `env:"POSTGRES_PORT"`
 	DB        string `env:"POSTGRES_DB"`
-	PoolConns int    `env:"POSTGRES_POOL_CONnS"`
+	PoolConns int    `env:"POSTGRES_POOL_CONNS"`
 }
 
 type redisConfig struct {
 	User     string        `env:"REDIS_USER"`
-	Password string        `env:"REDIS_PASSWORD"`
+	Password string        `env:"REDIS_USER_PASSWORD"`
 	Addr     string        `env:"REDIS_ADDR"`
 	Timeout  time.Duration `env:"REDIS_TIMEOUT"`
 }
 
 func MustLoadConfig() *Config {
-	var config *Config
+	var config Config
 
 	err := cleanenv.ReadEnv(&config)
 	if err != nil {
 		panic(err)
 	}
 
-	return config
+	return &config
 }

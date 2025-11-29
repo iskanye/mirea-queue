@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: queue-postgres
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - bot_postgres:/var/lib/postgresql/data
+    networks:
+      - bot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot_user -d telegram_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    container_name: queue-redis
+    env_file: .env
+    ports:
+      - "6379:6379"
+    volumes:
+      - bot_redis:/data
+    command: redis-server --appendonly yes
+    networks:
+      - bot_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  bot:
+    build: ./
+    container_name: queue-bot
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bot_network
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+
+volumes:
+  bot_postgres:
+  bot_redis:
+
+networks:
+  bot_network:
+    driver: bridge
