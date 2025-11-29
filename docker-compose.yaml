@@ -10,7 +10,7 @@ services:
     networks:
       - bot_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bot_user -d telegram_bot"]
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
       interval: 10s
       timeout: 5s
       retries: 5
