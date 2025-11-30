@@ -25,7 +25,7 @@ type QueueService interface {
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,
-	) (int, []models.QueueEntry, error)
+	) (int, error)
 }
 
 type UsersService interface {

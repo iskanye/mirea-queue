@@ -95,6 +95,6 @@ func (q *Queue) GetCurrentPosition(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) (int, []models.QueueEntry, error) {
-	return 0, nil, nil
+) (int, error) {
+	return 0, nil
 }
