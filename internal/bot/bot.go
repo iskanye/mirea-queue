@@ -46,4 +46,5 @@ func (b *Bot) Stop() {
 
 func (b *Bot) RegisterHandlers(handlers interfaces.BotHandlers) {
 	b.b.Handle("/start", handlers.Start)
+	b.b.Handle(tele.OnText, handlers.OnText)
 }

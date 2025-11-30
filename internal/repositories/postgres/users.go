@@ -141,7 +141,7 @@ func (s *Storage) GetUser(
 		SELECT name, group_name, queue_access
 		FROM users
 		JOIN student_groups USING(group_id)
-		WHERE chatID = $1;
+		WHERE chat_id = $1;
 		`,
 		chatID,
 	)

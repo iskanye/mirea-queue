@@ -41,7 +41,7 @@ func (q *Users) CreateUser(
 	chatID int64,
 	user models.User,
 ) (models.User, error) {
-	const op = "NewUser"
+	const op = "userservice.NewUser"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -80,5 +80,21 @@ func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,
 ) (models.User, error) {
-	return models.User{}, nil
+	const op = "userservice.GetUser"
+
+	log := q.log.With(
+		slog.String("op", op),
+	)
+
+	log.Info("Trying to get user")
+
+	user, err := q.userProvider.GetUser(ctx, chatID)
+	if err != nil {
+		log.Error("Failed to get user")
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully got user")
+
+	return user, nil
 }

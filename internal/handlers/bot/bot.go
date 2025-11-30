@@ -5,11 +5,14 @@ import (
 	"log/slog"
 
 	"github.com/iskanye/mirea-queue/internal/interfaces"
+	"gopkg.in/telebot.v4"
 )
 
 type Bot struct {
 	log *slog.Logger
 	ctx context.Context
+
+	channels map[int64]chan string
 
 	queueService interfaces.QueueService
 	usersService interfaces.UsersService
@@ -26,7 +29,33 @@ func New(
 		log: log,
 		ctx: ctx,
 
+		channels: make(map[int64]chan string),
+
 		queueService: queueService,
 		usersService: usersService,
 	}
+}
+
+func (b *Bot) OnText(c telebot.Context) error {
+	if ch, ok := b.channels[c.Chat().ID]; ok {
+		ch <- c.Text()
+	}
+
+	return nil
+}
+
+func (b *Bot) Dialogue(
+	c telebot.Context,
+	fun func(ch <-chan string, c telebot.Context) error,
+) error {
+	chatID := c.Chat().ID
+	ch := make(chan string, 1)
+	b.channels[chatID] = ch
+
+	defer func() {
+		close(ch)
+		delete(b.channels, chatID)
+	}()
+
+	return fun(ch, c)
 }

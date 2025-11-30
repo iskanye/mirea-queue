@@ -1,36 +1,48 @@
 package bot
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/repositories/postgres"
 	"gopkg.in/telebot.v4"
 )
 
 func (b *Bot) Start(c telebot.Context) error {
-	bot := c.Bot()
+	return b.Dialogue(c, func(ch <-chan string, c telebot.Context) error {
+		user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
+		if err == nil {
+			return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group))
+		}
+		if !errors.Is(err, postgres.ErrNotFound) {
+			return err
+		}
 
-	groupMsg, err := bot.Send(c.Sender(), "Введите свою группу")
-	if err != nil {
-		return err
-	}
+		err = c.Send("Введите группу")
+		if err != nil {
+			return err
+		}
 
-	group := groupMsg.Text
+		group := <-ch
 
-	usernameMsg, err := bot.Send(c.Sender(), "Введите своё имя и фамилию")
-	if err != nil {
-		return err
-	}
+		err = c.Send("Введите своё имя и фамилию")
+		if err != nil {
+			return err
+		}
 
-	username := usernameMsg.Text
+		username := <-ch
 
-	user := models.User{
-		Name:  username,
-		Group: group,
-	}
+		user = models.User{
+			Name:  username,
+			Group: group,
+		}
 
-	user, err = b.usersService.CreateUser(b.ctx, c.Chat().ID, user)
-	if err != nil {
-		return err
-	}
+		user, err = b.usersService.CreateUser(b.ctx, c.Chat().ID, user)
+		if err != nil {
+			return err
+		}
 
-	return c.Send("Успешно")
+		return c.Send("Успешно зарегистрированы")
+	})
 }
