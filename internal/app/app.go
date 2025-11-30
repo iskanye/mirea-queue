@@ -12,6 +12,9 @@ import (
 	"github.com/iskanye/mirea-queue/internal/services/users"
 )
 
+// Пагинация очереди
+const queueRange = 10
+
 type App struct {
 	log *slog.Logger
 	bot *bot.Bot
@@ -31,7 +34,7 @@ func New(
 		panic(err)
 	}
 
-	queue := queue.New(log, redis, redis)
+	queue := queue.New(log, queueRange, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 
 	bot, ctx := bot.New(cfg)

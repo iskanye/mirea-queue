@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/models"
-	"github.com/iskanye/mirea-queue/internal/repositories/postgres"
+	"github.com/iskanye/mirea-queue/internal/services/users"
 	"gopkg.in/telebot.v4"
 )
 
@@ -15,7 +15,7 @@ func (b *Bot) Start(c telebot.Context) error {
 		if err == nil {
 			return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group))
 		}
-		if !errors.Is(err, postgres.ErrNotFound) {
+		if !errors.Is(err, users.ErrNotFound) {
 			return err
 		}
 

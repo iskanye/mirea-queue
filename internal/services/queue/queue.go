@@ -12,6 +12,7 @@ import (
 type Queue struct {
 	log *slog.Logger
 
+	// Пагинация очереди
 	queueRange int64
 
 	queue       interfaces.Queue
@@ -20,19 +21,21 @@ type Queue struct {
 
 func New(
 	log *slog.Logger,
+	queueRange int64,
 	queue interfaces.Queue,
 	queueViewer interfaces.QueueViewer,
 ) *Queue {
 	return &Queue{
 		log: log,
 
-		queueRange: 10,
+		queueRange: queueRange,
 
 		queue:       queue,
 		queueViewer: queueViewer,
 	}
 }
 
+// Пушает пользователя в очередь
 func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
@@ -46,17 +49,21 @@ func (q *Queue) Push(
 		slog.String("queue_subject", queue.Subject),
 	)
 
-	log.Info("Trying to push user to queue")
+	log.Info("Trying to push to queue")
 
 	err := q.queue.Push(ctx, queue, entry)
 	if err != nil {
-		log.Error("Failed to create user")
+		log.Error("Failed to push",
+			slog.String("err", err.Error()),
+		)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	queueEntries, err := q.queueViewer.Range(ctx, queue, q.queueRange)
 	if err != nil {
-		log.Error("Failed to get queue")
+		log.Error("Failed to get queue",
+			slog.String("err", err.Error()),
+		)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -65,6 +72,8 @@ func (q *Queue) Push(
 	return queueEntries, nil
 }
 
+// Получает пользователя из начала очереди
+// и удаляет его из очереди
 func (q *Queue) Pop(
 	ctx context.Context,
 	queue models.Queue,
@@ -72,6 +81,7 @@ func (q *Queue) Pop(
 	return models.QueueEntry{}, nil, nil
 }
 
+// Очищает очередь
 func (q *Queue) Clear(
 	ctx context.Context,
 	queue models.Queue,
@@ -80,6 +90,7 @@ func (q *Queue) Clear(
 	return nil
 }
 
+// Получает текущую позицию пользователя в очереди
 func (q *Queue) GetCurrentPosition(
 	ctx context.Context,
 	queue models.Queue,

@@ -2,11 +2,13 @@ package users
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/iskanye/mirea-queue/internal/interfaces"
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/repositories/postgres"
 )
 
 type Users struct {
@@ -36,6 +38,7 @@ func New(
 	}
 }
 
+// Создает нового пользователя и возвращает его
 func (q *Users) CreateUser(
 	ctx context.Context,
 	chatID int64,
@@ -52,7 +55,11 @@ func (q *Users) CreateUser(
 
 	err := q.userCreator.CreateUser(ctx, chatID, user)
 	if err != nil {
-		log.Error("Failed to create user")
+		// Не проверяем на то, существует ли уже юзер или нет
+		// Это проверка находится на уровне обработчиков бота
+		log.Error("Failed to create user",
+			slog.String("err", err.Error()),
+		)
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -61,6 +68,7 @@ func (q *Users) CreateUser(
 	return user, nil
 }
 
+// Удаляет пользователя
 func (q *Users) RemoveUser(
 	ctx context.Context,
 	chatID int64,
@@ -68,6 +76,7 @@ func (q *Users) RemoveUser(
 	return nil
 }
 
+// Обновляет данные пользователя
 func (q *Users) UpdateUser(
 	ctx context.Context,
 	chatID int64,
@@ -76,6 +85,8 @@ func (q *Users) UpdateUser(
 	return models.User{}, nil
 }
 
+// Получает пользователя
+// Если его нет то возвращает ErrNotFound
 func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,
@@ -90,7 +101,13 @@ func (q *Users) GetUser(
 
 	user, err := q.userProvider.GetUser(ctx, chatID)
 	if err != nil {
-		log.Error("Failed to get user")
+		log.Error("Failed to get user",
+			slog.String("err", err.Error()),
+		)
+
+		if errors.Is(err, postgres.ErrNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrNotFound)
+		}
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
