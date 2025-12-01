@@ -36,14 +36,21 @@ func New(
 	}
 }
 
+// Обрабатывает текстовый ввод пользователя
 func (b *Bot) OnText(c telebot.Context) error {
 	if ch, ok := b.channels[c.Chat().ID]; ok {
 		ch <- c.Text()
+		return nil
 	}
 
+	b.log.Warn("Unhandled input",
+		slog.String("text", c.Text()),
+	)
 	return nil
 }
 
+// Оборачивает команду в диалог, ожидая ввода от пользователя.
+// Ввод пользователя передается через канал ch
 func (b *Bot) Dialogue(
 	c telebot.Context,
 	fun func(ch <-chan string, c telebot.Context) error,
@@ -52,10 +59,17 @@ func (b *Bot) Dialogue(
 	ch := make(chan string, 1)
 	b.channels[chatID] = ch
 
-	defer func() {
+	defer func(cmd string) {
 		close(ch)
 		delete(b.channels, chatID)
-	}()
 
+		b.log.Info("Dialogue chain closed",
+			slog.String("cmd", cmd),
+		)
+	}(c.Text())
+
+	b.log.Info("Dialogue chain started",
+		slog.String("cmd", c.Text()),
+	)
 	return fun(ch, c)
 }

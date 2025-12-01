@@ -15,6 +15,7 @@ func main() {
 	log := slog.Default()
 
 	app := app.New(log, cfg)
+	defer app.Stop()
 
 	go func() {
 		app.Run()
@@ -24,6 +25,4 @@ func main() {
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	<-stop
-
-	app.Stop()
 }
