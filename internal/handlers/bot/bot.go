@@ -16,6 +16,7 @@ type Bot struct {
 
 	queueService interfaces.QueueService
 	usersService interfaces.UsersService
+	adminService interfaces.AdminService
 }
 
 func New(
@@ -24,6 +25,7 @@ func New(
 
 	queueService interfaces.QueueService,
 	usersService interfaces.UsersService,
+	adminService interfaces.AdminService,
 ) *Bot {
 	return &Bot{
 		log: log,
@@ -33,6 +35,7 @@ func New(
 
 		queueService: queueService,
 		usersService: usersService,
+		adminService: adminService,
 	}
 }
 

@@ -60,3 +60,8 @@ type UsersService interface {
 		chatID int64,
 	) (models.User, error)
 }
+
+// Сервис проверки прав админа
+type AdminService interface {
+	ValidateToken(string) bool
+}

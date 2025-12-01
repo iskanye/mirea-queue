@@ -9,18 +9,10 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
-func (b *Bot) Start(c tele.Context) error {
-	user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
-	if err == nil {
-		// Пользователь найден - приветствуем его
-		return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group))
-	}
-	if !errors.Is(err, services.ErrNotFound) {
-		return err
-	}
-
-	// Если пользователь не существует начинаем диалоговую цепочку
-	return b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
+// Функция получения пользователя из ввода
+func (b *Bot) getUser(c tele.Context) (models.User, error) {
+	var user models.User
+	err := b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
 		msg, err := c.Bot().Send(c.Chat(), "Введите группу")
 		if err != nil {
 			return err
@@ -43,19 +35,62 @@ func (b *Bot) Start(c tele.Context) error {
 			return err
 		}
 
-		user := models.User{
-			Name:  usernameMsg.Text,
-			Group: groupMsg.Text,
-		}
-
-		user, err = b.usersService.CreateUser(b.ctx, c.Chat().ID, user)
+		msg, err = c.Bot().Edit(msg, "Введите токен админа(если есть)")
 		if err != nil {
 			return err
 		}
 
-		msg, err = c.Bot().Edit(msg, "Успешно зарегистрированы")
-		return err
+		tokenMsg := <-ch
+		err = c.Bot().Delete(tokenMsg)
+		if err != nil {
+			return err
+		}
+
+		err = c.Bot().Delete(msg)
+		if err != nil {
+			return err
+		}
+
+		user = models.User{
+			Name:        usernameMsg.Text,
+			Group:       groupMsg.Text,
+			QueueAccess: b.adminService.ValidateToken(tokenMsg.Text),
+		}
+
+		return c.Send(fmt.Sprintf(
+			"Группа: %s\nФИО: %s\nПрава админа: %t",
+			user.Group, user.Name, user.QueueAccess,
+		))
 	})
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func (b *Bot) Start(c tele.Context) error {
+	user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
+	if err == nil {
+		// Пользователь найден - приветствуем его
+		return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group))
+	}
+	if !errors.Is(err, services.ErrNotFound) {
+		return err
+	}
+
+	// Если пользователь не существует получаем его данные
+	user, err = b.getUser(c)
+	if err != nil {
+		return err
+	}
+
+	user, err = b.usersService.CreateUser(b.ctx, c.Chat().ID, user)
+	if err != nil {
+		return err
+	}
+
+	return c.Send("Успешно зарегистрированы")
 }
 
 func (b *Bot) Edit(c tele.Context) error {
@@ -67,40 +102,16 @@ func (b *Bot) Edit(c tele.Context) error {
 		return err
 	}
 
-	return b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите группу")
-		if err != nil {
-			return err
-		}
-
-		groupMsg := <-ch
-		err = c.Bot().Delete(groupMsg)
-		if err != nil {
-			return err
-		}
-
-		msg, err = c.Bot().Edit(msg, "Введите своё имя и фамилию")
-		if err != nil {
-			return err
-		}
-
-		usernameMsg := <-ch
-		err = c.Bot().Delete(usernameMsg)
-		if err != nil {
-			return err
-		}
-
-		user := models.User{
-			Name:  usernameMsg.Text,
-			Group: groupMsg.Text,
-		}
-
-		user, err = b.usersService.UpdateUser(b.ctx, c.Chat().ID, user)
-		if err != nil {
-			return err
-		}
-
-		msg, err = c.Bot().Edit(msg, "Успешно изменены данные")
+	// Если пользователь не существует получаем его данные
+	user, err := b.getUser(c)
+	if err != nil {
 		return err
-	})
+	}
+
+	user, err = b.usersService.UpdateUser(b.ctx, c.Chat().ID, user)
+	if err != nil {
+		return err
+	}
+
+	return c.Send("Успешно изменены данные")
 }

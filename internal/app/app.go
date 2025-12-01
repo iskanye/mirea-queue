@@ -8,6 +8,7 @@ import (
 	botHandlers "github.com/iskanye/mirea-queue/internal/handlers/bot"
 	"github.com/iskanye/mirea-queue/internal/repositories/postgres"
 	"github.com/iskanye/mirea-queue/internal/repositories/redis"
+	"github.com/iskanye/mirea-queue/internal/services/admin"
 	"github.com/iskanye/mirea-queue/internal/services/queue"
 	"github.com/iskanye/mirea-queue/internal/services/users"
 )
@@ -36,9 +37,10 @@ func New(
 
 	queue := queue.New(log, queueRange, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
+	admin := admin.New(log, cfg)
 
 	bot, ctx := bot.New(cfg)
-	handlers := botHandlers.New(log, ctx, queue, users)
+	handlers := botHandlers.New(log, ctx, queue, users, admin)
 
 	bot.RegisterHandlers(handlers)
 
