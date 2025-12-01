@@ -27,7 +27,7 @@ type QueueService interface {
 		key string,
 	) error
 	// Получает текущую позицию пользователя в очереди
-	GetCurrentPosition(
+	GetPosition(
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,

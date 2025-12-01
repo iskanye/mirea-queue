@@ -43,7 +43,7 @@ func (q *Queue) Push(
 	queue models.Queue,
 	entry models.QueueEntry,
 ) (int64, error) {
-	const op = "Push"
+	const op = "queue.Push"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -78,7 +78,27 @@ func (q *Queue) Pop(
 	ctx context.Context,
 	queue models.Queue,
 ) (models.QueueEntry, error) {
-	return models.QueueEntry{}, nil
+	const op = "queue.Pop"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to pop from queue")
+
+	entry, err := q.queue.Pop(ctx, queue)
+	if err != nil {
+		log.Error("Failed to pop",
+			slog.String("err", err.Error()),
+		)
+		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully poped")
+
+	return entry, nil
 }
 
 func (q *Queue) Clear(
@@ -86,13 +106,53 @@ func (q *Queue) Clear(
 	queue models.Queue,
 	key string,
 ) error {
+	const op = "queue.Clear"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to clear queue")
+
+	err := q.queue.Clear(ctx, queue)
+	if err != nil {
+		log.Error("Failed to clear queue",
+			slog.String("err", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully cleared")
+
 	return nil
 }
 
-func (q *Queue) GetCurrentPosition(
+func (q *Queue) GetPosition(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
 ) (int64, error) {
-	return 0, nil
+	const op = "queue.GetPosition"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to get position in queue")
+
+	pos, err := q.queuePos.GetPosition(ctx, queue, entry)
+	if err != nil {
+		log.Error("Failed to get entry position",
+			slog.String("err", err.Error()),
+		)
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully got position")
+
+	return pos, nil
 }

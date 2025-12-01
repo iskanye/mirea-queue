@@ -44,7 +44,7 @@ func (q *Users) CreateUser(
 	chatID int64,
 	user models.User,
 ) (models.User, error) {
-	const op = "userService.NewUser"
+	const op = "users.NewUser"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -72,6 +72,26 @@ func (q *Users) RemoveUser(
 	ctx context.Context,
 	chatID int64,
 ) error {
+	const op = "users.RemoveUser"
+
+	log := q.log.With(
+		slog.String("op", op),
+	)
+
+	log.Info("Trying to remove user")
+
+	err := q.userRemover.RemoveUser(ctx, chatID)
+	if err != nil {
+		// Не проверяем на то, существует ли уже юзер или нет
+		// Это проверка находится на уровне обработчиков бота
+		log.Error("Failed to remove user",
+			slog.String("err", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("User successfully removed")
+
 	return nil
 }
 
@@ -80,7 +100,7 @@ func (q *Users) UpdateUser(
 	chatID int64,
 	user models.User,
 ) (models.User, error) {
-	const op = "userService.UpdateUser"
+	const op = "users.UpdateUser"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -108,7 +128,7 @@ func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,
 ) (models.User, error) {
-	const op = "userService.GetUser"
+	const op = "users.GetUser"
 
 	log := q.log.With(
 		slog.String("op", op),
