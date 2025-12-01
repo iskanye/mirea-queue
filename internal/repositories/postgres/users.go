@@ -95,7 +95,7 @@ func (s *Storage) UpdateUser(
 			INSERT INTO student_groups (group_name)
 			VALUES ($1)
 			ON CONFLICT DO NOTHING
-			RETURNING group_id;
+			RETURNING group_id
 		)
 		SELECT group_id FROM inserted
 		UNION ALL

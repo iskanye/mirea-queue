@@ -44,7 +44,7 @@ func (q *Users) CreateUser(
 	chatID int64,
 	user models.User,
 ) (models.User, error) {
-	const op = "userservice.NewUser"
+	const op = "userService.NewUser"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -80,14 +80,35 @@ func (q *Users) UpdateUser(
 	chatID int64,
 	user models.User,
 ) (models.User, error) {
-	return models.User{}, nil
+	const op = "userService.UpdateUser"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("username", user.Name),
+	)
+
+	log.Info("Trying to update user data")
+
+	err := q.userModifier.UpdateUser(ctx, chatID, user)
+	if err != nil {
+		// Не проверяем на то, существует ли уже юзер или нет
+		// Это проверка находится на уровне обработчиков бота
+		log.Error("Failed to update user",
+			slog.String("err", err.Error()),
+		)
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully updated user data")
+
+	return user, nil
 }
 
 func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,
 ) (models.User, error) {
-	const op = "userservice.GetUser"
+	const op = "userService.GetUser"
 
 	log := q.log.With(
 		slog.String("op", op),
