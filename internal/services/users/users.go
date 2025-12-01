@@ -8,7 +8,8 @@ import (
 
 	"github.com/iskanye/mirea-queue/internal/interfaces"
 	"github.com/iskanye/mirea-queue/internal/models"
-	"github.com/iskanye/mirea-queue/internal/repositories/postgres"
+	"github.com/iskanye/mirea-queue/internal/repositories"
+	"github.com/iskanye/mirea-queue/internal/services"
 )
 
 type Users struct {
@@ -100,8 +101,8 @@ func (q *Users) GetUser(
 			slog.String("err", err.Error()),
 		)
 
-		if errors.Is(err, postgres.ErrNotFound) {
-			return models.User{}, fmt.Errorf("%s: %w", op, ErrNotFound)
+		if errors.Is(err, repositories.ErrNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, services.ErrNotFound)
 		}
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}

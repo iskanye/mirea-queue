@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/repositories"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -150,7 +151,7 @@ func (s *Storage) GetUser(
 	err := getUser.Scan(&user.Name, &user.Group, &user.QueueAccess)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.User{}, fmt.Errorf("%s: %w", op, ErrNotFound)
+			return models.User{}, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
 		}
 
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
