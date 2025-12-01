@@ -7,3 +7,7 @@ type BotHandlers interface {
 	Start(telebot.Context) error
 	Edit(telebot.Context) error
 }
+
+type BotMiddlewares interface {
+	GetUser(telebot.HandlerFunc) telebot.HandlerFunc
+}

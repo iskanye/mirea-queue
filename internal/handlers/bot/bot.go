@@ -46,6 +46,11 @@ func (b *Bot) OnText(c telebot.Context) error {
 		return nil
 	}
 
+	err := c.Bot().Delete(c.Message())
+	if err != nil {
+		return err
+	}
+
 	b.log.Warn("Unhandled input",
 		slog.String("text", c.Text()),
 	)

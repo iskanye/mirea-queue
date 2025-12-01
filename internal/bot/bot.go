@@ -44,8 +44,20 @@ func (b *Bot) Stop() {
 	b.b.Stop()
 }
 
-func (b *Bot) RegisterHandlers(handlers interfaces.BotHandlers) {
+func (b *Bot) Register(
+	handlers interfaces.BotHandlers,
+	middlewares interfaces.BotMiddlewares,
+) {
+	// Функции регистрации пользователя
 	b.b.Handle("/start", handlers.Start)
-	b.b.Handle("/edit", handlers.Edit)
+
+	// Группа требующая авторизации
+	authorized := b.b.Group()
+	{
+		authorized.Use(middlewares.GetUser)
+		authorized.Handle("/edit", handlers.Edit)
+	}
+
+	// Обработчик любого текста
 	b.b.Handle(tele.OnText, handlers.OnText)
 }

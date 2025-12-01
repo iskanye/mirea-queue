@@ -19,10 +19,6 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		groupMsg := <-ch
-		err = c.Bot().Delete(groupMsg)
-		if err != nil {
-			return err
-		}
 
 		msg, err = c.Bot().Edit(msg, "Введите своё имя и фамилию")
 		if err != nil {
@@ -30,10 +26,6 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		usernameMsg := <-ch
-		err = c.Bot().Delete(usernameMsg)
-		if err != nil {
-			return err
-		}
 
 		msg, err = c.Bot().Edit(msg, "Введите токен админа(если есть)")
 		if err != nil {
@@ -41,10 +33,6 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		tokenMsg := <-ch
-		err = c.Bot().Delete(tokenMsg)
-		if err != nil {
-			return err
-		}
 
 		err = c.Bot().Delete(msg)
 		if err != nil {
@@ -94,15 +82,7 @@ func (b *Bot) Start(c tele.Context) error {
 }
 
 func (b *Bot) Edit(c tele.Context) error {
-	_, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
-	if errors.Is(err, services.ErrNotFound) {
-		return c.Send("Вы не зарегистрированы")
-	}
-	if err != nil {
-		return err
-	}
-
-	// Если пользователь не существует получаем его данные
+	// Получаем новые данные пользователя
 	user, err := b.getUser(c)
 	if err != nil {
 		return err
