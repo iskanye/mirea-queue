@@ -12,7 +12,7 @@ type Bot struct {
 	log *slog.Logger
 	ctx context.Context
 
-	channels map[int64]chan string
+	channels map[int64]chan *telebot.Message
 
 	queueService interfaces.QueueService
 	usersService interfaces.UsersService
@@ -29,7 +29,7 @@ func New(
 		log: log,
 		ctx: ctx,
 
-		channels: make(map[int64]chan string),
+		channels: make(map[int64]chan *telebot.Message),
 
 		queueService: queueService,
 		usersService: usersService,
@@ -39,7 +39,7 @@ func New(
 // Обрабатывает текстовый ввод пользователя
 func (b *Bot) OnText(c telebot.Context) error {
 	if ch, ok := b.channels[c.Chat().ID]; ok {
-		ch <- c.Text()
+		ch <- c.Message()
 		return nil
 	}
 
@@ -53,10 +53,10 @@ func (b *Bot) OnText(c telebot.Context) error {
 // Ввод пользователя передается через канал ch
 func (b *Bot) Dialogue(
 	c telebot.Context,
-	fun func(ch <-chan string, c telebot.Context) error,
+	fun func(ch <-chan *telebot.Message, c telebot.Context) error,
 ) error {
 	chatID := c.Chat().ID
-	ch := make(chan string, 1)
+	ch := make(chan *telebot.Message, 1)
 	b.channels[chatID] = ch
 
 	defer func(cmd string) {
