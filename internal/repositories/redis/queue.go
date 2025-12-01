@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/redis/go-redis/v9"
 )
 
 func (s *Storage) Push(
@@ -14,7 +15,7 @@ func (s *Storage) Push(
 ) error {
 	const op = "redis.Push"
 
-	_, err := s.cl.LPush(ctx, queue.Key(), entry.Student).Result()
+	_, err := s.cl.RPush(ctx, queue.Key(), entry.Student).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -28,7 +29,7 @@ func (s *Storage) Pop(
 ) (models.QueueEntry, error) {
 	const op = "redis.Pop"
 
-	student, err := s.cl.RPop(ctx, queue.Key()).Result()
+	student, err := s.cl.LPop(ctx, queue.Key()).Result()
 	if err != nil {
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -45,7 +46,7 @@ func (s *Storage) Range(
 ) ([]models.QueueEntry, error) {
 	const op = "redis.Range"
 
-	students, err := s.cl.LRange(ctx, queue.Key(), -n, -1).Result()
+	students, err := s.cl.LRange(ctx, queue.Key(), 0, n-1).Result()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -72,4 +73,19 @@ func (s *Storage) Clear(
 	}
 
 	return nil
+}
+
+func (s *Storage) GetPosition(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) (int64, error) {
+	const op = "redis.GetPosition"
+
+	pos, err := s.cl.LPos(ctx, queue.Key(), entry.Student, redis.LPosArgs{}).Result()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return pos, nil
 }

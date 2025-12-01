@@ -17,6 +17,7 @@ type Queue struct {
 
 	queue       interfaces.Queue
 	queueViewer interfaces.QueueViewer
+	queuePos    interfaces.QueuePosition
 }
 
 func New(
@@ -24,6 +25,7 @@ func New(
 	queueRange int64,
 	queue interfaces.Queue,
 	queueViewer interfaces.QueueViewer,
+	queuePos interfaces.QueuePosition,
 ) *Queue {
 	return &Queue{
 		log: log,
@@ -32,6 +34,7 @@ func New(
 
 		queue:       queue,
 		queueViewer: queueViewer,
+		queuePos:    queuePos,
 	}
 }
 
@@ -40,7 +43,7 @@ func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) ([]models.QueueEntry, error) {
+) (int64, error) {
 	const op = "Push"
 
 	log := q.log.With(
@@ -56,20 +59,20 @@ func (q *Queue) Push(
 		log.Error("Failed to push",
 			slog.String("err", err.Error()),
 		)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	queueEntries, err := q.queueViewer.Range(ctx, queue, q.queueRange)
+	pos, err := q.queuePos.GetPosition(ctx, queue, entry)
 	if err != nil {
-		log.Error("Failed to get queue",
+		log.Error("Failed to get entry position",
 			slog.String("err", err.Error()),
 		)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("Successfully pushed")
 
-	return queueEntries, nil
+	return pos, nil
 }
 
 // Получает пользователя из начала очереди
@@ -77,8 +80,8 @@ func (q *Queue) Push(
 func (q *Queue) Pop(
 	ctx context.Context,
 	queue models.Queue,
-) (models.QueueEntry, []models.QueueEntry, error) {
-	return models.QueueEntry{}, nil, nil
+) (models.QueueEntry, error) {
+	return models.QueueEntry{}, nil
 }
 
 // Очищает очередь
@@ -95,6 +98,6 @@ func (q *Queue) GetCurrentPosition(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) (int, error) {
+) (int64, error) {
 	return 0, nil
 }

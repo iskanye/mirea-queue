@@ -11,11 +11,11 @@ type QueueService interface {
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,
-	) ([]models.QueueEntry, error)
+	) (int64, error)
 	Pop(
 		ctx context.Context,
 		queue models.Queue,
-	) (models.QueueEntry, []models.QueueEntry, error)
+	) (models.QueueEntry, error)
 	Clear(
 		ctx context.Context,
 		queue models.Queue,
@@ -25,7 +25,7 @@ type QueueService interface {
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,
-	) (int, error)
+	) (int64, error)
 }
 
 type UsersService interface {

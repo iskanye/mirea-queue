@@ -34,7 +34,7 @@ func New(
 		panic(err)
 	}
 
-	queue := queue.New(log, queueRange, redis, redis)
+	queue := queue.New(log, queueRange, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 
 	bot, ctx := bot.New(cfg)
