@@ -38,7 +38,6 @@ func New(
 	}
 }
 
-// Создает нового пользователя и возвращает его
 func (q *Users) CreateUser(
 	ctx context.Context,
 	chatID int64,
@@ -68,7 +67,6 @@ func (q *Users) CreateUser(
 	return user, nil
 }
 
-// Удаляет пользователя
 func (q *Users) RemoveUser(
 	ctx context.Context,
 	chatID int64,
@@ -76,7 +74,6 @@ func (q *Users) RemoveUser(
 	return nil
 }
 
-// Обновляет данные пользователя
 func (q *Users) UpdateUser(
 	ctx context.Context,
 	chatID int64,
@@ -85,8 +82,6 @@ func (q *Users) UpdateUser(
 	return models.User{}, nil
 }
 
-// Получает пользователя
-// Если его нет то возвращает ErrNotFound
 func (q *Users) GetUser(
 	ctx context.Context,
 	chatID int64,

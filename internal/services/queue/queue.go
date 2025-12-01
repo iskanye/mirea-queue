@@ -38,7 +38,6 @@ func New(
 	}
 }
 
-// Пушает пользователя в очередь
 func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
@@ -75,8 +74,6 @@ func (q *Queue) Push(
 	return pos, nil
 }
 
-// Получает пользователя из начала очереди
-// и удаляет его из очереди
 func (q *Queue) Pop(
 	ctx context.Context,
 	queue models.Queue,
@@ -84,7 +81,6 @@ func (q *Queue) Pop(
 	return models.QueueEntry{}, nil
 }
 
-// Очищает очередь
 func (q *Queue) Clear(
 	ctx context.Context,
 	queue models.Queue,
@@ -93,7 +89,6 @@ func (q *Queue) Clear(
 	return nil
 }
 
-// Получает текущую позицию пользователя в очереди
 func (q *Queue) GetCurrentPosition(
 	ctx context.Context,
 	queue models.Queue,
