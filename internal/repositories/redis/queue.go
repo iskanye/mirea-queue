@@ -87,5 +87,5 @@ func (s *Storage) GetPosition(
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return pos, nil
+	return pos + 1, nil
 }

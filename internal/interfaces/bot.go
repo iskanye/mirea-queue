@@ -6,8 +6,12 @@ type BotHandlers interface {
 	OnText(telebot.Context) error
 	Start(telebot.Context) error
 	Edit(telebot.Context) error
+
+	Push(telebot.Context) error
+	Pop(telebot.Context) error
 }
 
 type BotMiddlewares interface {
 	GetUser(telebot.HandlerFunc) telebot.HandlerFunc
+	GetPermissions(telebot.HandlerFunc) telebot.HandlerFunc
 }

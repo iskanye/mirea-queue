@@ -56,6 +56,10 @@ func (b *Bot) Register(
 	{
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle("/edit", handlers.Edit)
+		authorized.Handle("/push", handlers.Push)
+
+		// Нужны права админа
+		authorized.Handle("/pop", handlers.Pop, middlewares.GetPermissions)
 	}
 
 	// Обработчик любого текста
