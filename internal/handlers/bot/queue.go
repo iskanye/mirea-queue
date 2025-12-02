@@ -75,6 +75,7 @@ func (b *Bot) Pop(c telebot.Context) error {
 			return err
 		}
 
+		// Гарантировано что айди конвертируетсся в инт64
 		chatID, _ := strconv.Atoi(entry.ChatID)
 
 		user, err = b.usersService.GetUser(b.ctx, int64(chatID))
@@ -84,8 +85,24 @@ func (b *Bot) Pop(c telebot.Context) error {
 
 		_, err = c.Bot().Edit(msg,
 			fmt.Sprintf(
-				"Очередь %s\nНа сдачу приглашается %s",
-				queue.Key(), user.Name,
+				"Очередь по предмету %s\nНа сдачу приглашается %s",
+				queue.Subject, user.Name,
+			),
+		)
+		if err != nil {
+			return err
+		}
+
+		// Получаем чат того чья очередь
+		chat, err := c.Bot().ChatByID(int64(chatID))
+		if err != nil {
+			return err
+		}
+
+		_, err = c.Bot().Send(chat,
+			fmt.Sprintf(
+				"Вы приглашаетесь на сдачу по предмету %s",
+				queue.Subject,
 			),
 		)
 		if err != nil {
