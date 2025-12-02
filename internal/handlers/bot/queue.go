@@ -36,10 +36,7 @@ func (b *Bot) Push(c telebot.Context) error {
 
 		_, err = c.Bot().Edit(msg,
 			fmt.Sprintf(
-				`
-				Очередь %s
-				Текущая ваша позиция: %d
-				`,
+				"Очередь %s\nТекущая ваша позиция: %d",
 				queue.Key(), pos,
 			),
 		)
@@ -87,10 +84,7 @@ func (b *Bot) Pop(c telebot.Context) error {
 
 		_, err = c.Bot().Edit(msg,
 			fmt.Sprintf(
-				`
-				Очередь %s
-				На сдачу приглашается %s
-				`,
+				"Очередь %s\nНа сдачу приглашается %s",
 				queue.Key(), user.Name,
 			),
 		)
