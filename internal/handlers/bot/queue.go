@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/iskanye/mirea-queue/internal/models"
 	"gopkg.in/telebot.v4"
@@ -25,7 +26,7 @@ func (b *Bot) Push(c telebot.Context) error {
 		}
 
 		entry := models.QueueEntry{
-			Student: user.Name,
+			ChatID: fmt.Sprint(c.Chat().ID),
 		}
 
 		pos, err := b.queueService.Push(b.ctx, queue, entry)
@@ -35,8 +36,11 @@ func (b *Bot) Push(c telebot.Context) error {
 
 		_, err = c.Bot().Edit(msg,
 			fmt.Sprintf(
-				"Очередь %s:%s\nТекущая ваша позиция: %d",
-				queue.Group, queue.Subject, pos,
+				`
+				Очередь %s
+				Текущая ваша позиция: %d
+				`,
+				queue.Key(), pos,
 			),
 		)
 		if err != nil {
@@ -74,10 +78,20 @@ func (b *Bot) Pop(c telebot.Context) error {
 			return err
 		}
 
+		chatID, _ := strconv.Atoi(entry.ChatID)
+
+		user, err = b.usersService.GetUser(b.ctx, int64(chatID))
+		if err != nil {
+			return err
+		}
+
 		_, err = c.Bot().Edit(msg,
 			fmt.Sprintf(
-				"Очередь %s:%s\nНа сдачу приглашается %s",
-				queue.Group, queue.Subject, entry.Student,
+				`
+				Очередь %s
+				На сдачу приглашается %s
+				`,
+				queue.Key(), user.Name,
 			),
 		)
 		if err != nil {

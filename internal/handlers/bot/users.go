@@ -46,7 +46,11 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		return c.Send(fmt.Sprintf(
-			"Группа: %s\nФИО: %s\nПрава админа: %t",
+			`
+			Группа: %s
+			ФИО: %s
+			Права админа: %t
+			`,
 			user.Group, user.Name, user.QueueAccess,
 		))
 	})

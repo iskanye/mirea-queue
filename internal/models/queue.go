@@ -8,9 +8,9 @@ type Queue struct {
 }
 
 func (q *Queue) Key() string {
-	return fmt.Sprintf("%s:%s", q.Group, q.Subject)
+	return fmt.Sprintf("%s : %s", q.Group, q.Subject)
 }
 
 type QueueEntry struct {
-	Student string
+	ChatID string
 }

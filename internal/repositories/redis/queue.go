@@ -15,7 +15,7 @@ func (s *Storage) Push(
 ) error {
 	const op = "redis.Push"
 
-	_, err := s.cl.RPush(ctx, queue.Key(), entry.Student).Result()
+	_, err := s.cl.RPush(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -35,7 +35,7 @@ func (s *Storage) Pop(
 	}
 
 	return models.QueueEntry{
-		Student: student,
+		ChatID: student,
 	}, nil
 }
 
@@ -54,7 +54,7 @@ func (s *Storage) Range(
 	entries := make([]models.QueueEntry, 0, n)
 	for _, student := range students {
 		entries = append(entries, models.QueueEntry{
-			Student: student,
+			ChatID: student,
 		})
 	}
 
@@ -82,7 +82,7 @@ func (s *Storage) GetPosition(
 ) (int64, error) {
 	const op = "redis.GetPosition"
 
-	pos, err := s.cl.LPos(ctx, queue.Key(), entry.Student, redis.LPosArgs{}).Result()
+	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
