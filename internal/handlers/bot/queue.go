@@ -1,10 +1,12 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/services"
 	"gopkg.in/telebot.v4"
 )
 
@@ -72,6 +74,10 @@ func (b *Bot) Pop(c telebot.Context) error {
 
 		entry, err := b.queueService.Pop(b.ctx, queue)
 		if err != nil {
+			if errors.Is(err, services.ErrNotFound) {
+				_, err := c.Bot().Edit(msg, "Очередь не найдена")
+				return err
+			}
 			return err
 		}
 

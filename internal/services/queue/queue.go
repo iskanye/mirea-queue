@@ -2,11 +2,14 @@ package queue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/iskanye/mirea-queue/internal/interfaces"
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/repositories"
+	"github.com/iskanye/mirea-queue/internal/services"
 )
 
 type Queue struct {
@@ -93,6 +96,10 @@ func (q *Queue) Pop(
 		log.Error("Failed to pop",
 			slog.String("err", err.Error()),
 		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return models.QueueEntry{}, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -121,6 +128,10 @@ func (q *Queue) Clear(
 		log.Error("Failed to clear queue",
 			slog.String("err", err.Error()),
 		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -149,6 +160,10 @@ func (q *Queue) GetPosition(
 		log.Error("Failed to get entry position",
 			slog.String("err", err.Error()),
 		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return 0, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 

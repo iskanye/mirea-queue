@@ -2,9 +2,11 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/iskanye/mirea-queue/internal/models"
+	"github.com/iskanye/mirea-queue/internal/repositories"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -31,6 +33,9 @@ func (s *Storage) Pop(
 
 	student, err := s.cl.LPop(ctx, queue.Key()).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return models.QueueEntry{}, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -48,6 +53,9 @@ func (s *Storage) Range(
 
 	students, err := s.cl.LRange(ctx, queue.Key(), 0, n-1).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -69,6 +77,9 @@ func (s *Storage) Clear(
 
 	_, err := s.cl.Del(ctx, queue.Key()).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -84,8 +95,12 @@ func (s *Storage) GetPosition(
 
 	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return 0, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
+	// Отсчёт позиции должен начинаться с 1
 	return pos + 1, nil
 }
