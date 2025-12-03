@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/iskanye/mirea-queue/internal/models"
 	"github.com/iskanye/mirea-queue/internal/services"
@@ -24,7 +25,7 @@ func (b *Bot) Push(c telebot.Context) error {
 
 		queue := models.Queue{
 			Group:   user.Group,
-			Subject: subjectMsg.Text,
+			Subject: strings.TrimSpace(subjectMsg.Text),
 		}
 
 		entry := models.QueueEntry{

@@ -37,3 +37,10 @@ type QueuePosition interface {
 		entry models.QueueEntry,
 	) (int64, error)
 }
+
+type QueueLength interface {
+	Len(
+		ctx context.Context,
+		queue models.Queue,
+	) (int64, error)
+}

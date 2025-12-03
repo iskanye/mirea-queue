@@ -26,8 +26,13 @@ type QueueService interface {
 		queue models.Queue,
 		key string,
 	) error
+	// Получает длину очереди
+	Len(
+		ctx context.Context,
+		queue models.Queue,
+	) (int64, error)
 	// Получает текущую позицию пользователя в очереди
-	GetPosition(
+	Pos(
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,

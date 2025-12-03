@@ -21,6 +21,7 @@ type Queue struct {
 	queue       interfaces.Queue
 	queueViewer interfaces.QueueViewer
 	queuePos    interfaces.QueuePosition
+	queueLength interfaces.QueueLength
 }
 
 func New(
@@ -29,6 +30,7 @@ func New(
 	queue interfaces.Queue,
 	queueViewer interfaces.QueueViewer,
 	queuePos interfaces.QueuePosition,
+	queueLength interfaces.QueueLength,
 ) *Queue {
 	return &Queue{
 		log: log,
@@ -38,6 +40,7 @@ func New(
 		queue:       queue,
 		queueViewer: queueViewer,
 		queuePos:    queuePos,
+		queueLength: queueLength,
 	}
 }
 
@@ -144,12 +147,12 @@ func (q *Queue) Clear(
 	return nil
 }
 
-func (q *Queue) GetPosition(
+func (q *Queue) Pos(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
 ) (int64, error) {
-	const op = "queue.GetPosition"
+	const op = "queue.Pos"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -174,4 +177,35 @@ func (q *Queue) GetPosition(
 	log.Info("Successfully got position")
 
 	return pos, nil
+}
+
+func (q *Queue) Len(
+	ctx context.Context,
+	queue models.Queue,
+) (int64, error) {
+	const op = "queue.Len"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to get length of queue")
+
+	len, err := q.queueLength.Len(ctx, queue)
+	if err != nil {
+		log.Error("Failed to get length of queue",
+			slog.String("err", err.Error()),
+		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return 0, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully got length")
+
+	return len, nil
 }
