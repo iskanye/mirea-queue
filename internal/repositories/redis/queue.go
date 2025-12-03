@@ -19,7 +19,7 @@ func (s *Storage) Push(
 
 	// Пытаемся найти данный айди в очереди
 	// Если есть, значит пользователь уже есть в очереди
-	_, err := s.cl.LPop(ctx, queue.Key()).Result()
+	_, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
 	if err == nil {
 		return fmt.Errorf("%s: %w", op, repositories.ErrAlreadyInQueue)
 	} else if !errors.Is(err, redis.Nil) {

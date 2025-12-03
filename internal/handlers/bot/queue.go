@@ -128,3 +128,59 @@ func (b *Bot) Pop(c telebot.Context) error {
 
 	return nil
 }
+
+// Пропускает следующего в очереди
+func (b *Bot) LetAhead(c telebot.Context) error {
+	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
+		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
+		if err != nil {
+			return err
+		}
+
+		subjectMsg := <-ch
+
+		user := c.Get("user").(models.User)
+
+		queue := models.Queue{
+			Group:   user.Group,
+			Subject: subjectMsg.Text,
+		}
+
+		entry := models.QueueEntry{
+			ChatID: fmt.Sprint(c.Chat().ID),
+		}
+
+		err = b.queueService.LetAhead(b.ctx, queue, entry)
+		if err != nil {
+			if errors.Is(err, services.ErrNotFound) {
+				_, err := c.Bot().Edit(msg, "Очередь не найдена, либо вы в неё не записаны")
+				return err
+			}
+			if errors.Is(err, services.ErrQueueEnd) {
+				_, err := c.Bot().Edit(msg, "Вы последний в очереди очереди")
+				return err
+			}
+			return err
+		}
+
+		pos, err := b.queueService.Pos(b.ctx, queue, entry)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.Bot().Edit(
+			msg,
+			fmt.Sprintf("Вы успешно пропустили следующего в очереди\nВаша текущая позиция в очереди - %d", pos),
+		)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
