@@ -57,6 +57,7 @@ func (b *Bot) Register(
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle("/edit", handlers.Edit)
 		authorized.Handle("/push", handlers.Push)
+		authorized.Handle("/swap", handlers.LetAhead)
 
 		// Нужны права админа
 		authorized.Handle("/pop", handlers.Pop, middlewares.GetPermissions)

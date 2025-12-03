@@ -221,6 +221,7 @@ func (q *Queue) LetAhead(
 
 	if pos == len {
 		// Пользователь в конце очереди - не сможет пропустить
+		log.Warn("User is at the queue end")
 		return fmt.Errorf("%s: %w", op, services.ErrQueueEnd)
 	}
 

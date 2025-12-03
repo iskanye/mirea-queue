@@ -157,7 +157,7 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 				return err
 			}
 			if errors.Is(err, services.ErrQueueEnd) {
-				_, err := c.Bot().Edit(msg, "Вы последний в очереди очереди")
+				_, err := c.Bot().Edit(msg, "Вы последний в очереди")
 				return err
 			}
 			return err
