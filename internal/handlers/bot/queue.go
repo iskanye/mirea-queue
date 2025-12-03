@@ -33,6 +33,10 @@ func (b *Bot) Push(c telebot.Context) error {
 
 		pos, err := b.queueService.Push(b.ctx, queue, entry)
 		if err != nil {
+			if errors.Is(err, services.ErrAlreadyInQueue) {
+				_, err := c.Bot().Edit(msg, "Вы уже в очереди")
+				return err
+			}
 			return err
 		}
 

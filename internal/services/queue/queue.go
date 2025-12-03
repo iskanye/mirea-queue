@@ -61,6 +61,10 @@ func (q *Queue) Push(
 		log.Error("Failed to push",
 			slog.String("err", err.Error()),
 		)
+
+		if errors.Is(err, repositories.ErrAlreadyInQueue) {
+			return 0, fmt.Errorf("%s: %w", op, services.ErrAlreadyInQueue)
+		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 

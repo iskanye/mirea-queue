@@ -17,7 +17,16 @@ func (s *Storage) Push(
 ) error {
 	const op = "redis.Push"
 
-	_, err := s.cl.RPush(ctx, queue.Key(), entry.ChatID).Result()
+	// Пытаемся найти данный айди в очереди
+	// Если есть, значит пользователь уже есть в очереди
+	_, err := s.cl.LPop(ctx, queue.Key()).Result()
+	if err == nil {
+		return fmt.Errorf("%s: %w", op, repositories.ErrAlreadyInQueue)
+	} else if !errors.Is(err, redis.Nil) {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.cl.RPush(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
