@@ -27,11 +27,17 @@ type QueueService interface {
 		key string,
 	) error
 	// Получает текущую позицию пользователя в очереди
-	GetPosition(
+	Pos(
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,
 	) (int64, error)
+	// Пропускает пользователя в очереди
+	LetAhead(
+		ctx context.Context,
+		queue models.Queue,
+		entry models.QueueEntry,
+	) error
 }
 
 // Сервис пользователей

@@ -3,6 +3,7 @@ package bot
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/iskanye/mirea-queue/internal/models"
 	"github.com/iskanye/mirea-queue/internal/services"
@@ -40,9 +41,9 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		user = models.User{
-			Name:        usernameMsg.Text,
-			Group:       groupMsg.Text,
-			QueueAccess: b.adminService.ValidateToken(tokenMsg.Text),
+			Name:        strings.TrimSpace(usernameMsg.Text),
+			Group:       strings.TrimSpace(groupMsg.Text),
+			QueueAccess: b.adminService.ValidateToken(strings.TrimSpace(tokenMsg.Text)),
 		}
 
 		return c.Send(fmt.Sprintf(

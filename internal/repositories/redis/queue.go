@@ -19,7 +19,7 @@ func (s *Storage) Push(
 
 	// Пытаемся найти данный айди в очереди
 	// Если есть, значит пользователь уже есть в очереди
-	_, err := s.cl.LPop(ctx, queue.Key()).Result()
+	_, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
 	if err == nil {
 		return fmt.Errorf("%s: %w", op, repositories.ErrAlreadyInQueue)
 	} else if !errors.Is(err, redis.Nil) {
@@ -112,4 +112,60 @@ func (s *Storage) GetPosition(
 
 	// Отсчёт позиции должен начинаться с 1
 	return pos + 1, nil
+}
+
+func (s *Storage) Len(
+	ctx context.Context,
+	queue models.Queue,
+) (int64, error) {
+	const op = "redis.Len"
+
+	len, err := s.cl.LLen(ctx, queue.Key()).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return 0, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return len, nil
+}
+
+func (s *Storage) LetAhead(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	const op = "redis.LetAhead"
+
+	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
+	if err != nil {
+		// Списка нет или элемента нет в списке
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	ahead, err := s.cl.LIndex(ctx, queue.Key(), pos+1).Result()
+	if err != nil {
+		// Элемент не найден так как изначальный элемент в конце списка
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Свапаем элементы
+	_, err = s.cl.LSet(ctx, queue.Key(), pos, ahead).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.cl.LSet(ctx, queue.Key(), pos+1, entry.ChatID).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
