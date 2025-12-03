@@ -44,3 +44,11 @@ type QueueLength interface {
 		queue models.Queue,
 	) (int64, error)
 }
+
+type QueueSwap interface {
+	LetAhead(
+		ctx context.Context,
+		queue models.Queue,
+		entry models.QueueEntry,
+	) error
+}

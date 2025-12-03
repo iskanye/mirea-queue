@@ -130,3 +130,42 @@ func (s *Storage) Len(
 
 	return len, nil
 }
+
+func (s *Storage) LetAhead(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	const op = "redis.LetAhead"
+
+	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
+	if err != nil {
+		// Списка нет или элемента нет в списке
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	ahead, err := s.cl.LIndex(ctx, queue.Key(), pos+1).Result()
+	if err != nil {
+		// Элемент не найден так как изначальный элемент в конце списка
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Свапаем элементы
+	_, err = s.cl.LSet(ctx, queue.Key(), pos, ahead).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.cl.LSet(ctx, queue.Key(), pos+1, entry.ChatID).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}

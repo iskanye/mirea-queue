@@ -22,6 +22,7 @@ type Queue struct {
 	queueViewer interfaces.QueueViewer
 	queuePos    interfaces.QueuePosition
 	queueLength interfaces.QueueLength
+	queueSwap   interfaces.QueueSwap
 }
 
 func New(
@@ -31,6 +32,7 @@ func New(
 	queueViewer interfaces.QueueViewer,
 	queuePos interfaces.QueuePosition,
 	queueLength interfaces.QueueLength,
+	queueSwap interfaces.QueueSwap,
 ) *Queue {
 	return &Queue{
 		log: log,
@@ -41,6 +43,7 @@ func New(
 		queueViewer: queueViewer,
 		queuePos:    queuePos,
 		queueLength: queueLength,
+		queueSwap:   queueSwap,
 	}
 }
 
@@ -179,11 +182,12 @@ func (q *Queue) Pos(
 	return pos, nil
 }
 
-func (q *Queue) Len(
+func (q *Queue) LetAhead(
 	ctx context.Context,
 	queue models.Queue,
-) (int64, error) {
-	const op = "queue.Len"
+	entry models.QueueEntry,
+) error {
+	const op = "queue.LetAhead"
 
 	log := q.log.With(
 		slog.String("op", op),
@@ -191,21 +195,44 @@ func (q *Queue) Len(
 		slog.String("queue_subject", queue.Subject),
 	)
 
-	log.Info("Trying to get length of queue")
+	log.Info("Trying to let someone go ahead in queue")
 
-	len, err := q.queueLength.Len(ctx, queue)
+	pos, err := q.queuePos.GetPosition(ctx, queue, entry)
 	if err != nil {
-		log.Error("Failed to get length of queue",
+		log.Error("Failed to get entry position",
 			slog.String("err", err.Error()),
 		)
 
 		if errors.Is(err, repositories.ErrNotFound) {
-			return 0, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+			return fmt.Errorf("%s: %w", op, services.ErrNotFound)
 		}
-		return 0, fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("Successfully got length")
+	len, err := q.queueLength.Len(ctx, queue)
+	if err != nil {
+		// Нет смысла проверять на ErrNotFound, так как
+		// на данный момент мы уже получили позицию в очереди
+		log.Error("Failed to get queue length",
+			slog.String("err", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", op, err)
+	}
 
-	return len, nil
+	if pos == len {
+		// Пользователь в конце очереди - не сможет пропустить
+		return fmt.Errorf("%s: %w", op, services.ErrQueueEnd)
+	}
+
+	err = q.queueSwap.LetAhead(ctx, queue, entry)
+	if err != nil {
+		log.Error("Failed to let someone go ahead",
+			slog.String("err", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully swapped with person ahead")
+
+	return nil
 }
