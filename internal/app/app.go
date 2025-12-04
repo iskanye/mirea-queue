@@ -41,7 +41,7 @@ func New(
 	admin := admin.New(log, cfg)
 
 	bot, ctx := bot.New(cfg)
-	handlers := botHandlers.New(log, ctx, queue, users, admin)
+	handlers := botHandlers.New(log, ctx, bot.StartMenu(), queue, users, admin)
 	middlewares := botMiddlewares.New(log, ctx, queue, users, admin)
 
 	bot.Register(handlers, middlewares)

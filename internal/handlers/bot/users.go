@@ -62,7 +62,7 @@ func (b *Bot) Start(c tele.Context) error {
 	user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
 	if err == nil {
 		// Пользователь найден - приветствуем его
-		return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group))
+		return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group), b.startMenu)
 	}
 	if !errors.Is(err, services.ErrNotFound) {
 		return err

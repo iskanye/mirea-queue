@@ -11,6 +11,9 @@ import (
 type Bot struct {
 	b *tele.Bot
 
+	startMenu *tele.ReplyMarkup
+	editBtn   tele.Btn
+
 	cancel context.CancelFunc
 }
 
@@ -32,10 +35,22 @@ func New(
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Инициализировать меню /start
+	startMenu := &tele.ReplyMarkup{}
+	edit := startMenu.Data("Изменить данные", "edit")
+	startMenu.Inline(
+		startMenu.Row(edit),
+	)
+
 	return &Bot{
-		b:      b,
-		cancel: cancel,
+		b:         b,
+		startMenu: startMenu,
+		cancel:    cancel,
 	}, ctx
+}
+
+func (b *Bot) StartMenu() *tele.ReplyMarkup {
+	return b.startMenu
 }
 
 func (b *Bot) Start() {
