@@ -14,7 +14,14 @@ import (
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var user models.User
 	err := b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите группу")
+		var err error
+		msg := c.Message()
+
+		if msg != nil {
+			msg, err = c.Bot().Send(c.Chat(), "Введите группу")
+		} else {
+			msg, err = c.Bot().Edit(msg, "Введите группу")
+		}
 		if err != nil {
 			return err
 		}
@@ -46,10 +53,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 			QueueAccess: b.adminService.ValidateToken(strings.TrimSpace(tokenMsg.Text)),
 		}
 
-		return c.Send(fmt.Sprintf(
-			"Группа: %s\nФИО: %s\nПрава админа: %t",
-			user.Group, user.Name, user.QueueAccess,
-		))
+		return b.showProfile(c, user)
 	})
 	if err != nil {
 		return models.User{}, err
@@ -58,11 +62,18 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	return user, nil
 }
 
+func (b *Bot) showProfile(c tele.Context, user models.User) error {
+	return c.Send(fmt.Sprintf(
+		"Группа: %s\nФИО: %s\nПрава админа: %t",
+		user.Group, user.Name, user.QueueAccess,
+	), b.startMenu)
+}
+
 func (b *Bot) Start(c tele.Context) error {
 	user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
 	if err == nil {
 		// Пользователь найден - приветствуем его
-		return c.Send(fmt.Sprintf("Привет %s из группы %s", user.Name, user.Group), b.startMenu)
+		return b.showProfile(c, user)
 	}
 	if !errors.Is(err, services.ErrNotFound) {
 		return err
@@ -79,7 +90,7 @@ func (b *Bot) Start(c tele.Context) error {
 		return err
 	}
 
-	return c.Send("Успешно зарегистрированы")
+	return nil
 }
 
 func (b *Bot) Edit(c tele.Context) error {
@@ -94,5 +105,5 @@ func (b *Bot) Edit(c tele.Context) error {
 		return err
 	}
 
-	return c.Send("Успешно изменены данные")
+	return c.Delete()
 }

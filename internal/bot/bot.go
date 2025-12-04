@@ -12,7 +12,7 @@ type Bot struct {
 	b *tele.Bot
 
 	startMenu *tele.ReplyMarkup
-	editBtn   tele.Btn
+	editBtn   *tele.Btn
 
 	cancel context.CancelFunc
 }
@@ -43,9 +43,12 @@ func New(
 	)
 
 	return &Bot{
-		b:         b,
+		b: b,
+
 		startMenu: startMenu,
-		cancel:    cancel,
+		editBtn:   &edit,
+
+		cancel: cancel,
 	}, ctx
 }
 
@@ -73,7 +76,7 @@ func (b *Bot) Register(
 	authorized := b.b.Group()
 	{
 		authorized.Use(middlewares.GetUser)
-		authorized.Handle("/edit", handlers.Edit)
+		authorized.Handle(b.editBtn, handlers.Edit)
 		authorized.Handle("/push", handlers.Push)
 		authorized.Handle("/swap", handlers.LetAhead)
 
