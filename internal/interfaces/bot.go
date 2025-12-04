@@ -3,6 +3,7 @@ package interfaces
 import "gopkg.in/telebot.v4"
 
 type BotHandlers interface {
+	// Общие обработчики
 	OnText(telebot.Context) error
 
 	// Обработчики пользователей
