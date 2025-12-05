@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/iskanye/mirea-queue/internal/models"
 	"github.com/iskanye/mirea-queue/internal/services"
@@ -36,6 +37,9 @@ func (b *Bot) Pop(c telebot.Context) error {
 	// Попаем челика из очереди
 	entry, err := b.queueService.Pop(b.ctx, queue)
 	if err != nil {
+		if errors.Is(err, services.ErrNotFound) {
+			return c.Send("Очередь пуста")
+		}
 		return err
 	}
 
@@ -48,9 +52,11 @@ func (b *Bot) Pop(c telebot.Context) error {
 		return err
 	}
 
-	err = c.Send(fmt.Sprintf("На сдачу приглашается %s", user.Name))
-	if err != nil {
-		return err
+	if chatID != c.Chat().ID {
+		err = c.Send(fmt.Sprintf("На сдачу приглашается %s", user.Name))
+		if err != nil {
+			return err
+		}
 	}
 
 	// Получаем чат того, кто щас сдавать пойдёт
@@ -174,6 +180,8 @@ func (b *Bot) showSubject(
 	queue models.Queue,
 	entry models.QueueEntry,
 ) error {
+	var sb strings.Builder
+
 	pos, err := b.queueService.Pos(b.ctx, queue, entry)
 
 	msgText := fmt.Sprintf("%s\nВаша текущая позиция в очереди - %d", queue.Key(), pos)
@@ -183,8 +191,10 @@ func (b *Bot) showSubject(
 		return err
 	}
 
-	err = c.Edit(msgText, b.subjectMenu)
-	if err != nil && !errors.Is(err, telebot.ErrMessageNotModified) {
+	sb.WriteString(msgText)
+
+	err = c.Edit(sb.String(), b.subjectMenu)
+	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}
 
