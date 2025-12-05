@@ -14,14 +14,7 @@ import (
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var user models.User
 	err := b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
-		var err error
-		msg := c.Message()
-
-		if msg != nil {
-			msg, err = c.Bot().Send(c.Chat(), "Введите группу")
-		} else {
-			msg, err = c.Bot().Edit(msg, "Введите группу")
-		}
+		msg, err := c.Bot().Send(c.Chat(), "Введите группу")
 		if err != nil {
 			return err
 		}
@@ -62,6 +55,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	return user, nil
 }
 
+// Функция отображения профиля
 func (b *Bot) showProfile(c tele.Context, user models.User) error {
 	return c.Send(fmt.Sprintf(
 		"Группа: %s\nФИО: %s\nПрава админа: %t",

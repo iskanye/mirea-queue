@@ -184,3 +184,46 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 
 	return nil
 }
+
+func (b *Bot) ChooseSubject(c telebot.Context) error {
+	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
+		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
+		if err != nil {
+			return err
+		}
+
+		subjectMsg := <-ch
+
+		err = c.Bot().Delete(msg)
+		if err != nil {
+			return err
+		}
+
+		user := c.Get("user").(models.User)
+
+		queue := models.Queue{
+			Group:   user.Group,
+			Subject: subjectMsg.Text,
+		}
+
+		entry := models.QueueEntry{
+			ChatID: fmt.Sprint(c.Chat().ID),
+		}
+
+		pos, err := b.queueService.Pos(b.ctx, queue, entry)
+
+		err = c.Edit(
+			fmt.Sprintf("Ваша текущая позиция в очереди %s - %d", queue.Key(), pos),
+		)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

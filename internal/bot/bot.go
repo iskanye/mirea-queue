@@ -13,6 +13,7 @@ type Bot struct {
 
 	startMenu *tele.ReplyMarkup
 	editBtn   *tele.Btn
+	chooseBtn *tele.Btn
 
 	cancel context.CancelFunc
 }
@@ -38,8 +39,10 @@ func New(
 	// Инициализировать меню /start
 	startMenu := &tele.ReplyMarkup{}
 	edit := startMenu.Data("Изменить данные", "edit")
+	choose := startMenu.Data("Выбрать предмет", "choose")
 	startMenu.Inline(
 		startMenu.Row(edit),
+		startMenu.Row(choose),
 	)
 
 	return &Bot{
@@ -47,6 +50,7 @@ func New(
 
 		startMenu: startMenu,
 		editBtn:   &edit,
+		chooseBtn: &choose,
 
 		cancel: cancel,
 	}, ctx
@@ -77,6 +81,7 @@ func (b *Bot) Register(
 	{
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle(b.editBtn, handlers.Edit)
+		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
 		authorized.Handle("/push", handlers.Push)
 		authorized.Handle("/swap", handlers.LetAhead)
 
