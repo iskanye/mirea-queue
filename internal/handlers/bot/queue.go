@@ -211,10 +211,14 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 		}
 
 		pos, err := b.queueService.Pos(b.ctx, queue, entry)
+		msgText := fmt.Sprintf("%s\n Ваша текущая позиция в очереди - %d", queue.Key(), pos)
+		if errors.Is(err, services.ErrNotFound) {
+			msgText = fmt.Sprintf("%s\n Вы не записаны в очередь", queue.Key())
+		} else if err != nil {
+			return err
+		}
 
-		err = c.Edit(
-			fmt.Sprintf("Ваша текущая позиция в очереди %s - %d", queue.Key(), pos),
-		)
+		err = c.Edit(msgText)
 		if err != nil {
 			return err
 		}

@@ -15,6 +15,10 @@ type Bot struct {
 	editBtn   *tele.Btn
 	chooseBtn *tele.Btn
 
+	subjectMenu *tele.ReplyMarkup
+	pushBtn     *tele.Btn
+	popBtn      *tele.Btn
+
 	cancel context.CancelFunc
 }
 
@@ -45,6 +49,15 @@ func New(
 		startMenu.Row(choose),
 	)
 
+	// Меню предмета
+	subjectMenu := &tele.ReplyMarkup{}
+	push := subjectMenu.Data("Записаться в очередь", "push")
+	pop := subjectMenu.Data("Позвать на сдачу", "pop")
+	subjectMenu.Inline(
+		subjectMenu.Row(push),
+		subjectMenu.Row(pop),
+	)
+
 	return &Bot{
 		b: b,
 
@@ -52,12 +65,20 @@ func New(
 		editBtn:   &edit,
 		chooseBtn: &choose,
 
+		subjectMenu: subjectMenu,
+		pushBtn:     &push,
+		popBtn:      &pop,
+
 		cancel: cancel,
 	}, ctx
 }
 
 func (b *Bot) StartMenu() *tele.ReplyMarkup {
 	return b.startMenu
+}
+
+func (b *Bot) SubjectMenu() *tele.ReplyMarkup {
+	return b.subjectMenu
 }
 
 func (b *Bot) Start() {
