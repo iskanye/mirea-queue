@@ -11,6 +11,7 @@ type BotHandlers interface {
 	Edit(telebot.Context) error
 
 	// Обработчики очереди
+	ChooseSubject(telebot.Context) error
 	Push(telebot.Context) error
 	Pop(telebot.Context) error
 	LetAhead(telebot.Context) error
@@ -19,4 +20,5 @@ type BotHandlers interface {
 type BotMiddlewares interface {
 	GetUser(telebot.HandlerFunc) telebot.HandlerFunc
 	GetPermissions(telebot.HandlerFunc) telebot.HandlerFunc
+	GetQueue(telebot.HandlerFunc) telebot.HandlerFunc
 }

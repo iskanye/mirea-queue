@@ -12,6 +12,9 @@ type Bot struct {
 	log *slog.Logger
 	ctx context.Context
 
+	startMenu   *telebot.ReplyMarkup
+	subjectMenu *telebot.ReplyMarkup
+
 	channels map[int64]chan *telebot.Message
 
 	queueService interfaces.QueueService
@@ -22,7 +25,8 @@ type Bot struct {
 func New(
 	log *slog.Logger,
 	ctx context.Context,
-
+	startOpts *telebot.ReplyMarkup,
+	subjectMenu *telebot.ReplyMarkup,
 	queueService interfaces.QueueService,
 	usersService interfaces.UsersService,
 	adminService interfaces.AdminService,
@@ -30,6 +34,9 @@ func New(
 	return &Bot{
 		log: log,
 		ctx: ctx,
+
+		startMenu:   startOpts,
+		subjectMenu: subjectMenu,
 
 		channels: make(map[int64]chan *telebot.Message),
 

@@ -13,120 +13,69 @@ import (
 
 // Пушает в очередь
 func (b *Bot) Push(c telebot.Context) error {
-	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
-		if err != nil {
-			return err
-		}
+	queue := c.Get("queue").(models.Queue)
 
-		subjectMsg := <-ch
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
 
-		user := c.Get("user").(models.User)
-
-		queue := models.Queue{
-			Group:   user.Group,
-			Subject: strings.TrimSpace(subjectMsg.Text),
-		}
-
-		entry := models.QueueEntry{
-			ChatID: fmt.Sprint(c.Chat().ID),
-		}
-
-		pos, err := b.queueService.Push(b.ctx, queue, entry)
-		if err != nil {
-			if errors.Is(err, services.ErrAlreadyInQueue) {
-				_, err := c.Bot().Edit(msg, "Вы уже в очереди")
-				return err
-			}
-			return err
-		}
-
-		_, err = c.Bot().Edit(msg,
-			fmt.Sprintf(
-				"Очередь %s\nТекущая ваша позиция: %d",
-				queue.Key(), pos,
-			),
-		)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
+	_, err := b.queueService.Push(b.ctx, queue, entry)
 	if err != nil {
+		if errors.Is(err, services.ErrAlreadyInQueue) {
+			return c.Send("Вы уже в очереди")
+		}
 		return err
 	}
 
-	return nil
+	return b.showSubject(c, queue, entry)
 }
 
 // Попает из очереди
 func (b *Bot) Pop(c telebot.Context) error {
-	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
-		if err != nil {
-			return err
+	queue := c.Get("queue").(models.Queue)
+
+	// Попаем челика из очереди
+	entry, err := b.queueService.Pop(b.ctx, queue)
+	if err != nil {
+		if errors.Is(err, services.ErrNotFound) {
+			return c.Send("Очередь пуста")
 		}
+		return err
+	}
 
-		subjectMsg := <-ch
+	// Айдишник гарантировано имеет тип int64, зуб даю
+	chatID, _ := strconv.ParseInt(entry.ChatID, 10, 64)
 
-		user := c.Get("user").(models.User)
-
-		queue := models.Queue{
-			Group:   user.Group,
-			Subject: subjectMsg.Text,
-		}
-
-		entry, err := b.queueService.Pop(b.ctx, queue)
-		if err != nil {
-			if errors.Is(err, services.ErrNotFound) {
-				_, err := c.Bot().Edit(msg, "Очередь не найдена")
-				return err
-			}
-			return err
-		}
-
-		// Гарантировано что айди конвертируетсся в инт64
-		chatID, _ := strconv.Atoi(entry.ChatID)
-
-		user, err = b.usersService.GetUser(b.ctx, int64(chatID))
-		if err != nil {
-			return err
-		}
-
-		_, err = c.Bot().Edit(msg,
-			fmt.Sprintf(
-				"Очередь по предмету %s\nНа сдачу приглашается %s",
-				queue.Subject, user.Name,
-			),
-		)
-		if err != nil {
-			return err
-		}
-
-		// Получаем чат того чья очередь
-		chat, err := c.Bot().ChatByID(int64(chatID))
-		if err != nil {
-			return err
-		}
-
-		_, err = c.Bot().Send(chat,
-			fmt.Sprintf(
-				"Вы приглашаетесь на сдачу по предмету %s",
-				queue.Subject,
-			),
-		)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
+	// Получаем бедолагу, которого только что попнули
+	user, err := b.usersService.GetUser(b.ctx, chatID)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if chatID != c.Chat().ID {
+		err = c.Send(fmt.Sprintf("На сдачу приглашается %s", user.Name))
+		if err != nil {
+			return err
+		}
+	}
+
+	// Получаем чат того, кто щас сдавать пойдёт
+	chat, err := c.Bot().ChatByID(chatID)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Bot().Send(chat,
+		fmt.Sprintf(
+			"Вы приглашаетесь на сдачу по предмету %s",
+			queue.Subject,
+		),
+	)
+	if err != nil {
+		return err
+	}
+
+	return b.showSubject(c, queue, entry)
 }
 
 // Пропускает следующего в очереди
@@ -179,6 +128,73 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 		return nil
 	})
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Выбрать предмет
+func (b *Bot) ChooseSubject(c telebot.Context) error {
+	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
+		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
+		if err != nil {
+			return err
+		}
+
+		subjectMsg := <-ch
+
+		err = c.Bot().Delete(msg)
+		if err != nil {
+			return err
+		}
+
+		user := c.Get("user").(models.User)
+
+		queue := models.Queue{
+			Group:   user.Group,
+			Subject: subjectMsg.Text,
+		}
+
+		entry := models.QueueEntry{
+			ChatID: fmt.Sprint(c.Chat().ID),
+		}
+
+		err = b.queueService.SaveToCache(b.ctx, c.Chat().ID, queue)
+		if err != nil {
+			return err
+		}
+
+		return b.showSubject(c, queue, entry)
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Выводит на экран информацию об очереди
+func (b *Bot) showSubject(
+	c telebot.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	var sb strings.Builder
+
+	pos, err := b.queueService.Pos(b.ctx, queue, entry)
+
+	msgText := fmt.Sprintf("%s\nВаша текущая позиция в очереди - %d", queue.Key(), pos)
+	if errors.Is(err, services.ErrNotFound) {
+		msgText = fmt.Sprintf("%s\nВы не записаны в очередь", queue.Key())
+	} else if err != nil {
+		return err
+	}
+
+	sb.WriteString(msgText)
+
+	err = c.Edit(sb.String(), b.subjectMenu)
+	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}
 

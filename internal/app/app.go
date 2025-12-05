@@ -36,12 +36,12 @@ func New(
 		panic(err)
 	}
 
-	queue := queue.New(log, queueRange, redis, redis, redis, redis, redis)
+	queue := queue.New(log, queueRange, redis, redis, redis, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 	admin := admin.New(log, cfg)
 
 	bot, ctx := bot.New(cfg)
-	handlers := botHandlers.New(log, ctx, queue, users, admin)
+	handlers := botHandlers.New(log, ctx, bot.StartMenu(), bot.SubjectMenu(), queue, users, admin)
 	middlewares := botMiddlewares.New(log, ctx, queue, users, admin)
 
 	bot.Register(handlers, middlewares)

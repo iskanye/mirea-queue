@@ -11,6 +11,14 @@ import (
 type Bot struct {
 	b *tele.Bot
 
+	startMenu *tele.ReplyMarkup
+	editBtn   *tele.Btn
+	chooseBtn *tele.Btn
+
+	subjectMenu *tele.ReplyMarkup
+	pushBtn     *tele.Btn
+	popBtn      *tele.Btn
+
 	cancel context.CancelFunc
 }
 
@@ -32,10 +40,45 @@ func New(
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Инициализировать меню /start
+	startMenu := &tele.ReplyMarkup{}
+	edit := startMenu.Data("Изменить данные", "edit")
+	choose := startMenu.Data("Выбрать предмет", "choose")
+	startMenu.Inline(
+		startMenu.Row(edit),
+		startMenu.Row(choose),
+	)
+
+	// Меню предмета
+	subjectMenu := &tele.ReplyMarkup{}
+	push := subjectMenu.Data("Записаться в очередь", "push")
+	pop := subjectMenu.Data("Позвать на сдачу", "pop")
+	subjectMenu.Inline(
+		subjectMenu.Row(push),
+		subjectMenu.Row(pop),
+	)
+
 	return &Bot{
-		b:      b,
+		b: b,
+
+		startMenu: startMenu,
+		editBtn:   &edit,
+		chooseBtn: &choose,
+
+		subjectMenu: subjectMenu,
+		pushBtn:     &push,
+		popBtn:      &pop,
+
 		cancel: cancel,
 	}, ctx
+}
+
+func (b *Bot) StartMenu() *tele.ReplyMarkup {
+	return b.startMenu
+}
+
+func (b *Bot) SubjectMenu() *tele.ReplyMarkup {
+	return b.subjectMenu
 }
 
 func (b *Bot) Start() {
@@ -58,12 +101,15 @@ func (b *Bot) Register(
 	authorized := b.b.Group()
 	{
 		authorized.Use(middlewares.GetUser)
-		authorized.Handle("/edit", handlers.Edit)
-		authorized.Handle("/push", handlers.Push)
-		authorized.Handle("/swap", handlers.LetAhead)
+		authorized.Handle(b.editBtn, handlers.Edit)
+		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
+
+		// Требует получить очередь из кеша
+		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
+		authorized.Handle("/swap", handlers.LetAhead, middlewares.GetQueue)
 
 		// Нужны права админа
-		authorized.Handle("/pop", handlers.Pop, middlewares.GetPermissions)
+		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)
 	}
 
 	// Обработчик любого текста
