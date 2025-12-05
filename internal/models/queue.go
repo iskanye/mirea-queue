@@ -1,10 +1,21 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Queue struct {
 	Group   string
 	Subject string
+}
+
+func QueueFromKey(key string) Queue {
+	data := strings.Split(key, " : ")
+	return Queue{
+		Group:   data[0],
+		Subject: data[1],
+	}
 }
 
 func (q *Queue) Key() string {

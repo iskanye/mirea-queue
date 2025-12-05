@@ -38,6 +38,17 @@ type QueueService interface {
 		queue models.Queue,
 		entry models.QueueEntry,
 	) error
+	// Сохраняет очередь в кеш
+	SaveToCache(
+		ctx context.Context,
+		chatID int64,
+		queue models.Queue,
+	) error
+	// Получает очеред из кеша
+	GetFromCache(
+		ctx context.Context,
+		chatID int64,
+	) (models.Queue, error)
 }
 
 // Сервис пользователей

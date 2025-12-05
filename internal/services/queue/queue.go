@@ -23,6 +23,8 @@ type Queue struct {
 	queuePos    interfaces.QueuePosition
 	queueLength interfaces.QueueLength
 	queueSwap   interfaces.QueueSwap
+
+	cache interfaces.Cache
 }
 
 func New(
@@ -33,6 +35,7 @@ func New(
 	queuePos interfaces.QueuePosition,
 	queueLength interfaces.QueueLength,
 	queueSwap interfaces.QueueSwap,
+	cache interfaces.Cache,
 ) *Queue {
 	return &Queue{
 		log: log,
@@ -44,6 +47,8 @@ func New(
 		queuePos:    queuePos,
 		queueLength: queueLength,
 		queueSwap:   queueSwap,
+
+		cache: cache,
 	}
 }
 
