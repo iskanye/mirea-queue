@@ -103,11 +103,13 @@ func (b *Bot) Register(
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle(b.editBtn, handlers.Edit)
 		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
-		authorized.Handle("/push", handlers.Push)
-		authorized.Handle("/swap", handlers.LetAhead)
+
+		// Требует получить очередь из кеша
+		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
+		authorized.Handle("/swap", handlers.LetAhead, middlewares.GetQueue)
 
 		// Нужны права админа
-		authorized.Handle("/pop", handlers.Pop, middlewares.GetPermissions)
+		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)
 	}
 
 	// Обработчик любого текста
