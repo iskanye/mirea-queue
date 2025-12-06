@@ -75,6 +75,12 @@ func (b *Bot) Pop(c telebot.Context) error {
 		return err
 	}
 
+	// Обновляем информацию о положении в очереди
+	// текущего пользователя (а не того которого мы попнули)
+	entry = models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
 	return b.showSubject(c, queue, entry)
 }
 
