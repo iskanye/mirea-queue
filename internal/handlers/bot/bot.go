@@ -78,13 +78,9 @@ func (b *Bot) Dialogue(
 		close(ch)
 		delete(b.channels, chatID)
 
-		b.log.Info("Dialogue chain closed",
-			slog.String("cmd", cmd),
-		)
+		b.log.Info("Dialogue chain closed")
 	}(c.Text())
 
-	b.log.Info("Dialogue chain started",
-		slog.String("cmd", c.Text()),
-	)
+	b.log.Info("Dialogue chain started")
 	return fun(ch, c)
 }
