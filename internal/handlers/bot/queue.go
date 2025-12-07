@@ -187,17 +187,41 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
+	sb.WriteString(queue.Key())
 
-	pos, err := b.queueService.Pos(b.ctx, queue, entry)
-
-	msgText := fmt.Sprintf("%s\nВаша текущая позиция в очереди - %d", queue.Key(), pos)
+	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
-		msgText = fmt.Sprintf("%s\nВы не записаны в очередь", queue.Key())
-	} else if err != nil {
+		sb.WriteString("\nОчередь не найдена")
+	} else if err == nil {
+		// Находим имена пользователей
+		for i, entry := range entries {
+			chatID, err := strconv.ParseInt(entry.ChatID, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			user, err := b.usersService.GetUser(b.ctx, chatID)
+			if err != nil {
+				return err
+			}
+
+			sb.WriteString(fmt.Sprintf("\n%d: %s", i+1, user.Name))
+		}
+
+		// Находим позицию текущего пользователя
+		pos, err := b.queueService.Pos(b.ctx, queue, entry)
+
+		msgText := fmt.Sprintf("\nВаша текущая позиция в очереди - %d", pos)
+		if errors.Is(err, services.ErrNotFound) {
+			msgText = "\nВы не записаны в очередь"
+		} else if err != nil {
+			return err
+		}
+
+		sb.WriteString(msgText)
+	} else {
 		return err
 	}
-
-	sb.WriteString(msgText)
 
 	err = c.Edit(sb.String(), b.subjectMenu)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
