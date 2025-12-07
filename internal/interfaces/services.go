@@ -38,6 +38,11 @@ type QueueService interface {
 		queue models.Queue,
 		entry models.QueueEntry,
 	) error
+	// Получает содержимое очереди (первые несколько элементов)
+	Range(
+		ctx context.Context,
+		queue models.Queue,
+	) ([]models.QueueEntry, error)
 	// Сохраняет очередь в кеш
 	SaveToCache(
 		ctx context.Context,

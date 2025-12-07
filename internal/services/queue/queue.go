@@ -242,3 +242,32 @@ func (q *Queue) LetAhead(
 
 	return nil
 }
+
+func (q *Queue) Range(
+	ctx context.Context,
+	queue models.Queue,
+) ([]models.QueueEntry, error) {
+	const op = "queue.Range"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to get queue entries")
+
+	entries, err := q.queueViewer.Range(ctx, queue, q.queueRange)
+	if err != nil {
+		log.Error("Failed to get queue entries",
+			slog.String("err", err.Error()),
+		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return nil, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return entries, nil
+}
