@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://github.com/iskanye/mirea-queue">
-        <img width="200px" height="200px" alt="maxo" src="docs/bot.webp">
+        <img width="200px" height="200px" alt="mirea-queue" src="docs/bot.webp">
     </a>
 </p>
 
