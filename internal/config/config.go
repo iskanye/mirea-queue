@@ -24,7 +24,6 @@ type postgresConfig struct {
 }
 
 type redisConfig struct {
-	User     string        `env:"REDIS_USER"`
 	Password string        `env:"REDIS_USER_PASSWORD"`
 	Addr     string        `env:"REDIS_ADDR"`
 	Timeout  time.Duration `env:"REDIS_TIMEOUT"`

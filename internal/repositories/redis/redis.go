@@ -17,7 +17,6 @@ func New(cfg *config.Config) (*Storage, error) {
 
 	client := redis.NewClient(&redis.Options{
 		Addr:         cfg.Redis.Addr,
-		Username:     cfg.Redis.User,
 		Password:     cfg.Redis.Password,
 		ReadTimeout:  cfg.Redis.Timeout,
 		WriteTimeout: cfg.Redis.Timeout,

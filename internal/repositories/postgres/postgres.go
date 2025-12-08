@@ -21,7 +21,7 @@ func New(cfg *config.Config) (*Storage, error) {
 		cfg.Postgres.Password,
 		cfg.Postgres.Host,
 		cfg.Postgres.Port,
-		cfg.Postgres.Password,
+		cfg.Postgres.DB,
 		cfg.Postgres.PoolConns,
 	)
 
