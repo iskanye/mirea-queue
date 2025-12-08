@@ -29,7 +29,7 @@
 Для работы бота необходим установленный [Docker](https://www.docker.com/). После настройки запустите следующие команды:
 
 ```bash
-docker compose up -d --build
+docker compose -f docker-compose.local.yaml up -d --build
 ```
 
 Пользоваться ботом можно по [ссылке](https://t.me/rtumirea_queuebot)
