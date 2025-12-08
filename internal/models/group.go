@@ -1,6 +1,6 @@
 package models
 
 type Group struct {
-	Name        string
-	ScheduleUrl string
+	Name        string `json:"fullTitle"`
+	ScheduleUrl string `json:"iCalLink"`
 }

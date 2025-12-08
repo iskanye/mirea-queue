@@ -7,10 +7,10 @@ import (
 )
 
 type GroupProvider interface {
-	GetGroup(
+	GetGroups(
 		ctx context.Context,
 		group string,
-	) (models.Group, error)
+	) ([]models.Group, error)
 }
 
 type ScheduleProvider interface {
