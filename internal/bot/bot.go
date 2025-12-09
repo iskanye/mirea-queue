@@ -16,6 +16,7 @@ type Bot struct {
 	chooseBtn *tele.Btn
 
 	subjectMenu *tele.ReplyMarkup
+	refreshBtn  *tele.Btn
 	pushBtn     *tele.Btn
 	popBtn      *tele.Btn
 	letAheadBtn *tele.Btn
@@ -52,10 +53,12 @@ func New(
 
 	// Меню предмета
 	subjectMenu := &tele.ReplyMarkup{}
+	refresh := subjectMenu.Data("Обновить", "update")
 	push := subjectMenu.Data("Записаться в очередь", "push")
 	pop := subjectMenu.Data("Позвать на сдачу", "pop")
 	letAhead := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
+		subjectMenu.Row(refresh),
 		subjectMenu.Row(push),
 		subjectMenu.Row(pop),
 		subjectMenu.Row(letAhead),
@@ -69,6 +72,7 @@ func New(
 		chooseBtn: &choose,
 
 		subjectMenu: subjectMenu,
+		refreshBtn:  &refresh,
 		pushBtn:     &push,
 		popBtn:      &pop,
 		letAheadBtn: &letAhead,
@@ -109,6 +113,7 @@ func (b *Bot) Register(
 		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
 
 		// Требует получить очередь из кеша
+		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
 
