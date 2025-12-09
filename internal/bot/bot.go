@@ -18,6 +18,7 @@ type Bot struct {
 	subjectMenu *tele.ReplyMarkup
 	pushBtn     *tele.Btn
 	popBtn      *tele.Btn
+	letAheadBtn *tele.Btn
 
 	cancel context.CancelFunc
 }
@@ -53,9 +54,11 @@ func New(
 	subjectMenu := &tele.ReplyMarkup{}
 	push := subjectMenu.Data("Записаться в очередь", "push")
 	pop := subjectMenu.Data("Позвать на сдачу", "pop")
+	letAhead := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
 		subjectMenu.Row(push),
 		subjectMenu.Row(pop),
+		subjectMenu.Row(letAhead),
 	)
 
 	return &Bot{
@@ -68,6 +71,7 @@ func New(
 		subjectMenu: subjectMenu,
 		pushBtn:     &push,
 		popBtn:      &pop,
+		letAheadBtn: &letAhead,
 
 		cancel: cancel,
 	}, ctx
@@ -106,7 +110,7 @@ func (b *Bot) Register(
 
 		// Требует получить очередь из кеша
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
-		authorized.Handle("/swap", handlers.LetAhead, middlewares.GetQueue)
+		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
 
 		// Нужны права админа
 		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)
