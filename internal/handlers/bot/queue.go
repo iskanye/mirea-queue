@@ -11,6 +11,17 @@ import (
 	"gopkg.in/telebot.v4"
 )
 
+// Обновляет данные очереди
+func (b *Bot) Refresh(c telebot.Context) error {
+	queue := c.Get("queue").(models.Queue)
+
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
 // Пушает в очередь
 func (b *Bot) Push(c telebot.Context) error {
 	queue := c.Get("queue").(models.Queue)
