@@ -61,10 +61,11 @@ func (s *Storage) Range(
 	const op = "redis.Range"
 
 	students, err := s.cl.LRange(ctx, queue.Key(), 0, n-1).Result()
+	// Очередь не создана
+	if len(students) == 0 {
+		return nil, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+	}
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
-		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
