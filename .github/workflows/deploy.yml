@@ -1,4 +1,4 @@
-name: Push To Docker Hub
+name: Deploy To Server
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    environment: Docker Hub
+    environment: mirea-queue
     
     steps:
     - name: Checkout code
@@ -29,4 +29,20 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/mirea-queue:latest
+        tags: ${{ vars.DOCKERHUB_USERNAME }}/mirea-queue:latest
+  deploy:
+    runs-on: ubuntu-latest
+    environment: mirea-queue
+    steps:
+    - name: Deploy on server
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        port: ${{ secrets.SSH_PORT }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd ${{ vars.SERVER_BOT_PATH }}
+          docker-compose pull
+          docker-compose up --force-recreate --build -d
+          docker image prune -f
