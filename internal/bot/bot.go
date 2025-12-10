@@ -16,6 +16,7 @@ type Bot struct {
 	chooseBtn *tele.Btn
 
 	subjectMenu *tele.ReplyMarkup
+	returnBtn   *tele.Btn
 	refreshBtn  *tele.Btn
 	pushBtn     *tele.Btn
 	popBtn      *tele.Btn
@@ -46,45 +47,47 @@ func New(
 
 	// Инициализировать меню /start
 	startMenu := &tele.ReplyMarkup{}
-	edit := startMenu.Data("Изменить", "edit")
-	choose := startMenu.Data("Очереди", "choose")
+	editBtn := startMenu.Data("Изменить", "edit")
+	chooseBtn := startMenu.Data("Очереди", "choose")
 	startMenu.Inline(
-		startMenu.Row(edit, choose),
+		startMenu.Row(editBtn, chooseBtn),
 	)
 
 	// Меню предмета
 	subjectMenu := &tele.ReplyMarkup{}
-	refresh := subjectMenu.Data("Обновить", "update")
-	push := subjectMenu.Data("Записаться", "push")
-	pop := subjectMenu.Data("Позвать на сдачу", "pop")
-	letAhead := subjectMenu.Data("Пропустить в очереди", "let-ahead")
+	returnBtn := subjectMenu.Data("Назад", "return")
+	refreshBtn := subjectMenu.Data("Обновить", "update")
+	pushBtn := subjectMenu.Data("Записаться", "push")
+	popBtn := subjectMenu.Data("Позвать на сдачу", "pop")
+	letAheadBtn := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
-		subjectMenu.Row(refresh),
-		subjectMenu.Row(push),
-		subjectMenu.Row(letAhead),
+		subjectMenu.Row(returnBtn, refreshBtn),
+		subjectMenu.Row(pushBtn),
+		subjectMenu.Row(letAheadBtn),
 	)
 
 	// Админ меню
 	subjectAdminMenu := &tele.ReplyMarkup{}
 	subjectAdminMenu.Inline(
-		subjectAdminMenu.Row(refresh),
-		subjectAdminMenu.Row(push),
-		subjectAdminMenu.Row(pop),
-		subjectAdminMenu.Row(letAhead),
+		subjectAdminMenu.Row(returnBtn, refreshBtn),
+		subjectAdminMenu.Row(pushBtn),
+		subjectAdminMenu.Row(popBtn),
+		subjectAdminMenu.Row(letAheadBtn),
 	)
 
 	return &Bot{
 		b: b,
 
 		startMenu: startMenu,
-		editBtn:   &edit,
-		chooseBtn: &choose,
+		editBtn:   &editBtn,
+		chooseBtn: &chooseBtn,
 
 		subjectMenu: subjectMenu,
-		refreshBtn:  &refresh,
-		pushBtn:     &push,
-		popBtn:      &pop,
-		letAheadBtn: &letAhead,
+		returnBtn:   &refreshBtn,
+		refreshBtn:  &refreshBtn,
+		pushBtn:     &pushBtn,
+		popBtn:      &popBtn,
+		letAheadBtn: &letAheadBtn,
 
 		subjectAdminMenu: subjectAdminMenu,
 
@@ -128,6 +131,7 @@ func (b *Bot) Register(
 		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
 
 		// Требует получить очередь из кеша
+		authorized.Handle(b.returnBtn, handlers.Return, middlewares.GetQueue)
 		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
