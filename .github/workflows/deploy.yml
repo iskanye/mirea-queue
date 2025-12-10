@@ -45,6 +45,7 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd ${{ vars.SERVER_BOT_PATH }}
+          docker-compose down
           docker-compose pull
-          docker-compose up --force-recreate --build -d
+          docker-compose up -d --build 
           docker image prune -f
