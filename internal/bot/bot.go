@@ -83,7 +83,7 @@ func New(
 		chooseBtn: &chooseBtn,
 
 		subjectMenu: subjectMenu,
-		returnBtn:   &refreshBtn,
+		returnBtn:   &returnBtn,
 		refreshBtn:  &refreshBtn,
 		pushBtn:     &pushBtn,
 		popBtn:      &popBtn,
@@ -129,9 +129,9 @@ func (b *Bot) Register(
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle(b.editBtn, handlers.Edit)
 		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
+		authorized.Handle(b.returnBtn, handlers.Return)
 
 		// Требует получить очередь из кеша
-		authorized.Handle(b.returnBtn, handlers.Return, middlewares.GetQueue)
 		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
