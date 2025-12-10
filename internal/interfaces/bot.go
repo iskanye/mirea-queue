@@ -9,9 +9,11 @@ type BotHandlers interface {
 	// Обработчики пользователей
 	Start(telebot.Context) error
 	Edit(telebot.Context) error
+	Return(telebot.Context) error
 
 	// Обработчики очереди
 	ChooseSubject(telebot.Context) error
+	Refresh(telebot.Context) error
 	Push(telebot.Context) error
 	Pop(telebot.Context) error
 	LetAhead(telebot.Context) error

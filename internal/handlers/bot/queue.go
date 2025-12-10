@@ -11,6 +11,17 @@ import (
 	"gopkg.in/telebot.v4"
 )
 
+// Обновляет данные очереди
+func (b *Bot) Refresh(c telebot.Context) error {
+	queue := c.Get("queue").(models.Queue)
+
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
 // Пушает в очередь
 func (b *Bot) Push(c telebot.Context) error {
 	queue := c.Get("queue").(models.Queue)
@@ -86,58 +97,24 @@ func (b *Bot) Pop(c telebot.Context) error {
 
 // Пропускает следующего в очереди
 func (b *Bot) LetAhead(c telebot.Context) error {
-	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
-		if err != nil {
-			return err
-		}
+	queue := c.Get("queue").(models.Queue)
 
-		subjectMsg := <-ch
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
 
-		user := c.Get("user").(models.User)
-
-		queue := models.Queue{
-			Group:   user.Group,
-			Subject: subjectMsg.Text,
-		}
-
-		entry := models.QueueEntry{
-			ChatID: fmt.Sprint(c.Chat().ID),
-		}
-
-		err = b.queueService.LetAhead(b.ctx, queue, entry)
-		if err != nil {
-			if errors.Is(err, services.ErrNotFound) {
-				_, err := c.Bot().Edit(msg, "Очередь не найдена, либо вы в неё не записаны")
-				return err
-			}
-			if errors.Is(err, services.ErrQueueEnd) {
-				_, err := c.Bot().Edit(msg, "Вы последний в очереди")
-				return err
-			}
-			return err
-		}
-
-		pos, err := b.queueService.Pos(b.ctx, queue, entry)
-		if err != nil {
-			return err
-		}
-
-		_, err = c.Bot().Edit(
-			msg,
-			fmt.Sprintf("Вы успешно пропустили следующего в очереди\nВаша текущая позиция в очереди - %d", pos),
-		)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
+	err := b.queueService.LetAhead(b.ctx, queue, entry)
 	if err != nil {
+		if errors.Is(err, services.ErrNotFound) {
+			return c.Send("Вы не записаны в очередь")
+		}
+		if errors.Is(err, services.ErrQueueEnd) {
+			return c.Send("Вы последний в очереди")
+		}
 		return err
 	}
 
-	return nil
+	return b.showSubject(c, queue, entry)
 }
 
 // Выбрать предмет
@@ -187,7 +164,7 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString(queue.Key())
+	sb.WriteString("Очередь: " + queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
@@ -205,7 +182,7 @@ func (b *Bot) showSubject(
 				return err
 			}
 
-			sb.WriteString(fmt.Sprintf("\n%d: %s", i+1, user.Name))
+			sb.WriteString(fmt.Sprintf("\n%3d.  %s", i+1, user.Name))
 		}
 
 		// Находим позицию текущего пользователя
@@ -223,7 +200,12 @@ func (b *Bot) showSubject(
 		return err
 	}
 
-	err = c.Edit(sb.String(), b.subjectMenu)
+	menu := b.subjectMenu
+	if user := c.Get("user").(models.User); user.QueueAccess {
+		menu = b.subjectAdminMenu
+	}
+
+	err = c.Edit(sb.String(), menu)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}

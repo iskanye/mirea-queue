@@ -16,8 +16,13 @@ type Bot struct {
 	chooseBtn *tele.Btn
 
 	subjectMenu *tele.ReplyMarkup
+	returnBtn   *tele.Btn
+	refreshBtn  *tele.Btn
 	pushBtn     *tele.Btn
 	popBtn      *tele.Btn
+	letAheadBtn *tele.Btn
+
+	subjectAdminMenu *tele.ReplyMarkup
 
 	cancel context.CancelFunc
 }
@@ -40,34 +45,51 @@ func New(
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Инициализировать меню /start
+	// Меню /start
 	startMenu := &tele.ReplyMarkup{}
-	edit := startMenu.Data("Изменить данные", "edit")
-	choose := startMenu.Data("Выбрать предмет", "choose")
+	editBtn := startMenu.Data("Изменить", "edit")
+	chooseBtn := startMenu.Data("Очереди", "choose")
 	startMenu.Inline(
-		startMenu.Row(edit),
-		startMenu.Row(choose),
+		startMenu.Row(editBtn, chooseBtn),
 	)
 
 	// Меню предмета
 	subjectMenu := &tele.ReplyMarkup{}
-	push := subjectMenu.Data("Записаться в очередь", "push")
-	pop := subjectMenu.Data("Позвать на сдачу", "pop")
+	returnBtn := subjectMenu.Data("Назад", "return")
+	refreshBtn := subjectMenu.Data("Обновить", "update")
+	pushBtn := subjectMenu.Data("Записаться", "push")
+	popBtn := subjectMenu.Data("Позвать на сдачу", "pop")
+	letAheadBtn := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
-		subjectMenu.Row(push),
-		subjectMenu.Row(pop),
+		subjectMenu.Row(returnBtn, refreshBtn),
+		subjectMenu.Row(pushBtn),
+		subjectMenu.Row(letAheadBtn),
+	)
+
+	// Админ меню
+	subjectAdminMenu := &tele.ReplyMarkup{}
+	subjectAdminMenu.Inline(
+		subjectAdminMenu.Row(returnBtn, refreshBtn),
+		subjectAdminMenu.Row(pushBtn),
+		subjectAdminMenu.Row(popBtn),
+		subjectAdminMenu.Row(letAheadBtn),
 	)
 
 	return &Bot{
 		b: b,
 
 		startMenu: startMenu,
-		editBtn:   &edit,
-		chooseBtn: &choose,
+		editBtn:   &editBtn,
+		chooseBtn: &chooseBtn,
 
 		subjectMenu: subjectMenu,
-		pushBtn:     &push,
-		popBtn:      &pop,
+		returnBtn:   &returnBtn,
+		refreshBtn:  &refreshBtn,
+		pushBtn:     &pushBtn,
+		popBtn:      &popBtn,
+		letAheadBtn: &letAheadBtn,
+
+		subjectAdminMenu: subjectAdminMenu,
 
 		cancel: cancel,
 	}, ctx
@@ -79,6 +101,10 @@ func (b *Bot) StartMenu() *tele.ReplyMarkup {
 
 func (b *Bot) SubjectMenu() *tele.ReplyMarkup {
 	return b.subjectMenu
+}
+
+func (b *Bot) SubjectAdminMenu() *tele.ReplyMarkup {
+	return b.subjectAdminMenu
 }
 
 func (b *Bot) Start() {
@@ -103,10 +129,12 @@ func (b *Bot) Register(
 		authorized.Use(middlewares.GetUser)
 		authorized.Handle(b.editBtn, handlers.Edit)
 		authorized.Handle(b.chooseBtn, handlers.ChooseSubject)
+		authorized.Handle(b.returnBtn, handlers.Return)
 
 		// Требует получить очередь из кеша
+		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
-		authorized.Handle("/swap", handlers.LetAhead, middlewares.GetQueue)
+		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
 
 		// Нужны права админа
 		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)

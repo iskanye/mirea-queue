@@ -49,6 +49,18 @@ func (b *Bot) Edit(c tele.Context) error {
 	return c.Delete()
 }
 
+// Вернуться на главную страницу
+func (b *Bot) Return(c tele.Context) error {
+	user := c.Get("user").(models.User)
+
+	err := c.Delete()
+	if err != nil {
+		return err
+	}
+
+	return b.showProfile(c, user)
+}
+
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var user models.User
