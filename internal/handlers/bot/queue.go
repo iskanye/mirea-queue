@@ -182,7 +182,7 @@ func (b *Bot) showSubject(
 				return err
 			}
 
-			sb.WriteString(fmt.Sprintf("\n%d: %s", i+1, user.Name))
+			sb.WriteString(fmt.Sprintf("\n%3d.  %s", i+1, user.Name))
 		}
 
 		// Находим позицию текущего пользователя
