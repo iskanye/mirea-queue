@@ -45,7 +45,7 @@ func New(
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Инициализировать меню /start
+	// Меню /start
 	startMenu := &tele.ReplyMarkup{}
 	editBtn := startMenu.Data("Изменить", "edit")
 	chooseBtn := startMenu.Data("Очереди", "choose")
