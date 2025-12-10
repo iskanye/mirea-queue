@@ -164,7 +164,7 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString(queue.Key())
+	sb.WriteString("Очередь: " + queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
@@ -200,7 +200,12 @@ func (b *Bot) showSubject(
 		return err
 	}
 
-	err = c.Edit(sb.String(), b.subjectMenu)
+	menu := b.subjectMenu
+	if user := c.Get("user").(models.User); user.QueueAccess {
+		menu = b.subjectAdminMenu
+	}
+
+	err = c.Edit(sb.String(), menu)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}

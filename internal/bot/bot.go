@@ -21,6 +21,8 @@ type Bot struct {
 	popBtn      *tele.Btn
 	letAheadBtn *tele.Btn
 
+	subjectAdminMenu *tele.ReplyMarkup
+
 	cancel context.CancelFunc
 }
 
@@ -44,24 +46,31 @@ func New(
 
 	// Инициализировать меню /start
 	startMenu := &tele.ReplyMarkup{}
-	edit := startMenu.Data("Изменить данные", "edit")
-	choose := startMenu.Data("Выбрать предмет", "choose")
+	edit := startMenu.Data("Изменить", "edit")
+	choose := startMenu.Data("Очереди", "choose")
 	startMenu.Inline(
-		startMenu.Row(edit),
-		startMenu.Row(choose),
+		startMenu.Row(edit, choose),
 	)
 
 	// Меню предмета
 	subjectMenu := &tele.ReplyMarkup{}
 	refresh := subjectMenu.Data("Обновить", "update")
-	push := subjectMenu.Data("Записаться в очередь", "push")
+	push := subjectMenu.Data("Записаться", "push")
 	pop := subjectMenu.Data("Позвать на сдачу", "pop")
 	letAhead := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
 		subjectMenu.Row(refresh),
 		subjectMenu.Row(push),
-		subjectMenu.Row(pop),
 		subjectMenu.Row(letAhead),
+	)
+
+	// Админ меню
+	subjectAdminMenu := &tele.ReplyMarkup{}
+	subjectAdminMenu.Inline(
+		subjectAdminMenu.Row(refresh),
+		subjectAdminMenu.Row(push),
+		subjectAdminMenu.Row(pop),
+		subjectAdminMenu.Row(letAhead),
 	)
 
 	return &Bot{
@@ -77,6 +86,8 @@ func New(
 		popBtn:      &pop,
 		letAheadBtn: &letAhead,
 
+		subjectAdminMenu: subjectAdminMenu,
+
 		cancel: cancel,
 	}, ctx
 }
@@ -87,6 +98,10 @@ func (b *Bot) StartMenu() *tele.ReplyMarkup {
 
 func (b *Bot) SubjectMenu() *tele.ReplyMarkup {
 	return b.subjectMenu
+}
+
+func (b *Bot) SubjectAdminMenu() *tele.ReplyMarkup {
+	return b.subjectAdminMenu
 }
 
 func (b *Bot) Start() {
