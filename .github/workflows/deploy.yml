@@ -32,6 +32,7 @@ jobs:
         tags: ${{ vars.DOCKERHUB_USERNAME }}/mirea-queue:latest
   deploy:
     runs-on: ubuntu-latest
+    needs: build-and-push
     environment: mirea-queue
     steps:
     - name: Deploy on server
@@ -41,6 +42,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd ${{ vars.SERVER_BOT_PATH }}
           docker-compose pull
