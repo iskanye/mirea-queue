@@ -10,6 +10,7 @@ type GroupProvider interface {
 	GetGroups(
 		ctx context.Context,
 		group string,
+		limit int,
 	) ([]models.Group, error)
 }
 

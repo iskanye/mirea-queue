@@ -17,11 +17,17 @@ type groupResponse struct {
 func (c *Client) GetGroups(
 	ctx context.Context,
 	group string,
+	limit int,
 ) ([]models.Group, error) {
 	const op = "mirea.GetGroups"
 
+	// Добавляем параметры в запрос
+	query := url.Values{}
+	query.Add("match", group)
+	query.Add("limit", fmt.Sprint(limit))
+
 	// Создаем запрос
-	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"search?match"+url.QueryEscape(group), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"search?"+query.Encode(), nil)
 	if err == nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

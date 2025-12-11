@@ -15,17 +15,26 @@ import (
 type Schedule struct {
 	log *slog.Logger
 
+	// Пагинации
+	groupPagination    int
+	subjectsPagination int
+
 	groupProvider    interfaces.GroupProvider
 	subjectsProvider interfaces.SubjectsProvider
 }
 
 func New(
 	log *slog.Logger,
+	groupPagination int,
+	subjectsPagination int,
 	groupProvider interfaces.GroupProvider,
 	subjectsProvider interfaces.SubjectsProvider,
 ) *Schedule {
 	return &Schedule{
 		log: log,
+
+		groupPagination:    groupPagination,
+		subjectsPagination: subjectsPagination,
 
 		groupProvider:    groupProvider,
 		subjectsProvider: subjectsProvider,
@@ -45,7 +54,7 @@ func (s *Schedule) GetGroups(
 
 	log.Info("Trying to get groups list")
 
-	groups, err := s.groupProvider.GetGroups(ctx, group)
+	groups, err := s.groupProvider.GetGroups(ctx, group, s.groupPagination)
 	if err != nil {
 		log.Error("Failed to get groups list",
 			slog.String("err", err.Error()),
