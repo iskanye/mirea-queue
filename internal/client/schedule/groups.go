@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
@@ -34,15 +33,9 @@ func (c *Client) GetGroups(
 	}
 	defer resp.Body.Close()
 
-	// Читаем весь ответ
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Парсим ответ (по хорошему должен жсон файлик)
+	// Парсим ответ (по хорошему должен быть жсон файлик)
 	var data groupResponse
-	err = json.Unmarshal(body, &data)
+	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		return nil, err
 	}
