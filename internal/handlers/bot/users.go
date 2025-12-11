@@ -34,6 +34,13 @@ func (b *Bot) Start(c tele.Context) error {
 	return nil
 }
 
+func (b *Bot) ChooseGroup(c tele.Context) error {
+	ch := b.channels[c.Chat().ID]
+	ch <- c.Data()
+	close(ch)
+	return nil
+}
+
 func (b *Bot) Edit(c tele.Context) error {
 	// Получаем новые данные пользователя
 	user, err := b.getUser(c)
@@ -64,27 +71,64 @@ func (b *Bot) Return(c tele.Context) error {
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var user models.User
-	err := b.Dialogue(c, func(ch <-chan *tele.Message, c tele.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите группу")
-		if err != nil {
-			return err
+
+	msg, err := c.Bot().Send(c.Chat(), "Введите группу")
+	if err != nil {
+		return models.User{}, err
+	}
+
+	ch := make(chan string, 1)
+	b.channels[c.Chat().ID] = ch
+
+	// Позволяем указывать только актуальную студенческую группу
+	var group string
+	for i := range ch {
+		groups, err := b.scheduleService.GetGroups(b.ctx, i)
+		// Группа не найдена в расписании
+		if errors.Is(err, services.ErrNotFound) {
+			msg, err = c.Bot().Edit(msg, "Данная группа не найдена. Попробуйте ещё раз")
+			continue
+		} else if err != nil {
+			return models.User{}, err
 		}
 
-		groupMsg := <-ch
+		// Если сразу получили группу то можем не продолжать
+		if len(groups) == 1 {
+			group = groups[0].Name
+			break
+		}
 
+		// Создаю кнопки под сообщением
+		groupMarkup := &tele.ReplyMarkup{}
+		btns := make([]tele.Btn, len(groups))
+		for j := range groups {
+			btns[j] = groupMarkup.Data(groups[j].Name, b.groupBtnUnique, groups[j].Name)
+		}
+		groupMarkup.Inline(
+			groupMarkup.Split(1, btns)...,
+		)
+
+		msg, err = c.Bot().Edit(msg, "Выберите группу", groupMarkup)
+		if err != nil && !errors.Is(err, tele.ErrSameMessageContent) {
+			return models.User{}, err
+		}
+	}
+
+	// Читаем оставшиеся данные
+	err = b.Dialogue(c, func(ch <-chan string, c tele.Context) error {
 		msg, err = c.Bot().Edit(msg, "Введите своё имя и фамилию")
 		if err != nil {
 			return err
 		}
 
-		usernameMsg := <-ch
+		username := <-ch
 
 		msg, err = c.Bot().Edit(msg, "Введите токен админа(если есть)")
 		if err != nil {
 			return err
 		}
 
-		tokenMsg := <-ch
+		token := <-ch
 
 		err = c.Bot().Delete(msg)
 		if err != nil {
@@ -92,9 +136,9 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		}
 
 		user = models.User{
-			Name:        strings.TrimSpace(usernameMsg.Text),
-			Group:       strings.TrimSpace(groupMsg.Text),
-			QueueAccess: b.adminService.ValidateToken(strings.TrimSpace(tokenMsg.Text)),
+			Name:        strings.TrimSpace(username),
+			Group:       strings.TrimSpace(group),
+			QueueAccess: b.adminService.ValidateToken(strings.TrimSpace(token)),
 		}
 
 		return b.showProfile(c, user)

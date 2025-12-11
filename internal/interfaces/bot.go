@@ -7,6 +7,7 @@ type BotHandlers interface {
 	OnText(telebot.Context) error
 
 	// Обработчики пользователей
+	ChooseGroup(telebot.Context) error
 	Start(telebot.Context) error
 	Edit(telebot.Context) error
 	Return(telebot.Context) error

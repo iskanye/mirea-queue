@@ -119,13 +119,13 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 
 // Выбрать предмет
 func (b *Bot) ChooseSubject(c telebot.Context) error {
-	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
+	err := b.Dialogue(c, func(ch <-chan string, c telebot.Context) error {
 		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
 		if err != nil {
 			return err
 		}
 
-		subjectMsg := <-ch
+		subject := <-ch
 
 		err = c.Bot().Delete(msg)
 		if err != nil {
@@ -136,7 +136,7 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 
 		queue := models.Queue{
 			Group:   user.Group,
-			Subject: subjectMsg.Text,
+			Subject: subject,
 		}
 
 		entry := models.QueueEntry{

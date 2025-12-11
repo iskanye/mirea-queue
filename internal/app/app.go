@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/iskanye/mirea-queue/internal/bot"
+	scheduleClient "github.com/iskanye/mirea-queue/internal/client/schedule"
 	"github.com/iskanye/mirea-queue/internal/config"
 	botHandlers "github.com/iskanye/mirea-queue/internal/handlers/bot"
 	botMiddlewares "github.com/iskanye/mirea-queue/internal/middlewares/bot"
@@ -11,11 +12,20 @@ import (
 	"github.com/iskanye/mirea-queue/internal/repositories/redis"
 	"github.com/iskanye/mirea-queue/internal/services/admin"
 	"github.com/iskanye/mirea-queue/internal/services/queue"
+	"github.com/iskanye/mirea-queue/internal/services/schedule"
 	"github.com/iskanye/mirea-queue/internal/services/users"
 )
 
-// Пагинация очереди
-const queueRange = 10
+const (
+	// Пагинация очереди
+	QueueRange = 10
+	// Пагинация групп
+	GroupRange = 5
+
+	// id для кнопок выбора группы и предмета
+	GroupBtnUnique   = "group"
+	SubjectBtnUnique = "bubject"
+)
 
 type App struct {
 	log *slog.Logger
@@ -36,16 +46,20 @@ func New(
 		panic(err)
 	}
 
-	queue := queue.New(log, queueRange, redis, redis, redis, redis, redis, redis)
+	client := scheduleClient.New()
+
+	queue := queue.New(log, QueueRange, redis, redis, redis, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 	admin := admin.New(log, cfg)
+	schedule := schedule.New(log, GroupRange, client, client)
 
-	bot, ctx := bot.New(cfg)
+	bot, ctx := bot.New(cfg, GroupBtnUnique, SubjectBtnUnique)
 	handlers := botHandlers.New(log, ctx,
 		bot.StartMenu(),
 		bot.SubjectMenu(),
 		bot.SubjectAdminMenu(),
-		queue, users, admin,
+		GroupBtnUnique, SubjectBtnUnique,
+		queue, users, admin, schedule,
 	)
 	middlewares := botMiddlewares.New(log, ctx, queue, users, admin)
 

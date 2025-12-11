@@ -15,9 +15,8 @@ import (
 type Schedule struct {
 	log *slog.Logger
 
-	// Пагинации
-	groupPagination    int
-	subjectsPagination int
+	// Пагинация групп
+	groupPagination int
 
 	groupProvider    interfaces.GroupProvider
 	subjectsProvider interfaces.SubjectsProvider
@@ -26,15 +25,13 @@ type Schedule struct {
 func New(
 	log *slog.Logger,
 	groupPagination int,
-	subjectsPagination int,
 	groupProvider interfaces.GroupProvider,
 	subjectsProvider interfaces.SubjectsProvider,
 ) *Schedule {
 	return &Schedule{
 		log: log,
 
-		groupPagination:    groupPagination,
-		subjectsPagination: subjectsPagination,
+		groupPagination: groupPagination,
 
 		groupProvider:    groupProvider,
 		subjectsProvider: subjectsProvider,

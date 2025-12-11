@@ -17,20 +17,20 @@ func (c *Client) GetSubjects(
 
 	// Создаем запрос
 	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"ical/1/"+fmt.Sprint(group.ID), nil)
-	if err == nil {
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Получаем ответ
 	resp, err := c.cl.Do(req)
-	if err == nil {
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer resp.Body.Close()
 
 	var subjects []string
 	err = ical.NewDecoder(resp.Body).Decode(subjects)
-	if err == nil {
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 

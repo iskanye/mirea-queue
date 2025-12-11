@@ -23,18 +23,18 @@ func (c *Client) GetGroups(
 
 	// Добавляем параметры в запрос
 	query := url.Values{}
-	query.Add("match", group)
-	query.Add("limit", fmt.Sprint(limit))
+	query.Set("match", group)
+	query.Set("limit", fmt.Sprint(limit))
 
 	// Создаем запрос
 	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"search?"+query.Encode(), nil)
-	if err == nil {
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Получаем ответ
 	resp, err := c.cl.Do(req)
-	if err == nil {
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer resp.Body.Close()

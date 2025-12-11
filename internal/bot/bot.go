@@ -22,6 +22,10 @@ type Bot struct {
 	popBtn      *tele.Btn
 	letAheadBtn *tele.Btn
 
+	// id для кнопок выбора группы и предмета
+	groupBtnUnique   string
+	subjectBtnUnique string
+
 	subjectAdminMenu *tele.ReplyMarkup
 
 	cancel context.CancelFunc
@@ -29,6 +33,8 @@ type Bot struct {
 
 func New(
 	cfg *config.Config,
+	groupBtnUnique string,
+	subjectBtnUnique string,
 ) (*Bot, context.Context) {
 	pref := tele.Settings{
 		Token:  cfg.Token,
@@ -91,6 +97,9 @@ func New(
 
 		subjectAdminMenu: subjectAdminMenu,
 
+		groupBtnUnique:   groupBtnUnique,
+		subjectBtnUnique: subjectBtnUnique,
+
 		cancel: cancel,
 	}, ctx
 }
@@ -142,4 +151,7 @@ func (b *Bot) Register(
 
 	// Обработчик любого текста
 	b.b.Handle(tele.OnText, handlers.OnText)
+
+	// Кнопки выбора
+	b.b.Handle("\f"+b.groupBtnUnique, handlers.ChooseGroup)
 }
