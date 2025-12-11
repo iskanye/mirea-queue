@@ -13,8 +13,8 @@ type GroupProvider interface {
 	) ([]models.Group, error)
 }
 
-type ScheduleProvider interface {
-	GetSchedule(
+type SubjectsProvider interface {
+	GetSubjects(
 		ctx context.Context,
 		group models.Group,
 	) ([]string, error)
