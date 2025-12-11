@@ -154,4 +154,5 @@ func (b *Bot) Register(
 
 	// Кнопки выбора
 	b.b.Handle("\f"+b.groupBtnUnique, handlers.ChooseGroup)
+	b.b.Handle("\f"+b.subjectBtnUnique, handlers.ChooseSubjectButton)
 }

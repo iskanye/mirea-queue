@@ -14,6 +14,7 @@ type BotHandlers interface {
 
 	// Обработчики очереди
 	ChooseSubject(telebot.Context) error
+	ChooseSubjectButton(telebot.Context) error
 	Refresh(telebot.Context) error
 	Push(telebot.Context) error
 	Pop(telebot.Context) error

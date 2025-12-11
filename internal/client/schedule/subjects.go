@@ -16,7 +16,7 @@ func (c *Client) GetSubjects(
 	const op = "mirea.GetSubjects"
 
 	// Создаем запрос
-	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"ical/1/"+fmt.Sprint(group.ID), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", group.ICalLink, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -28,8 +28,7 @@ func (c *Client) GetSubjects(
 	}
 	defer resp.Body.Close()
 
-	var subjects []string
-	err = ical.NewDecoder(resp.Body).Decode(subjects)
+	subjects, err := ical.NewDecoder(resp.Body).Decode()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

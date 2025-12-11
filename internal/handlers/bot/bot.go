@@ -20,6 +20,8 @@ type Bot struct {
 	groupBtnUnique   string
 	subjectBtnUnique string
 
+	// Каналы для внутренней связи между обработчиками.
+	// У каждого пользователя есть не более одного канала
 	channels map[int64]chan string
 
 	queueService    interfaces.QueueService

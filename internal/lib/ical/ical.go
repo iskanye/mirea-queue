@@ -12,7 +12,7 @@ const (
 	LecturePrefix     = "SUMMARY:ЛК " // Префикс лекции
 	IndependentPrefix = "SUMMARY:СР " // Префикс самостоятельной работы
 
-	PrefixLen = 11 // Длина префиксов
+	PrefixLen = 13 // Длина префиксов в байтах
 )
 
 type Decoder struct {
@@ -28,7 +28,7 @@ func NewDecoder(r io.Reader) *Decoder {
 }
 
 // Записывает найденные предметы в срез.
-func (d *Decoder) Decode(v []string) error {
+func (d *Decoder) Decode() ([]string, error) {
 	const op = "ical.Decode"
 
 	subjects := make(map[string]struct{})
@@ -56,14 +56,14 @@ func (d *Decoder) Decode(v []string) error {
 	}
 
 	if err := d.s.Err(); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Записываем данные из множества в срез
-	v = make([]string, 0, len(subjects))
+	res := make([]string, 0, len(subjects))
 	for k := range subjects {
-		v = append(v, k)
+		res = append(res, k)
 	}
 
-	return nil
+	return res, nil
 }

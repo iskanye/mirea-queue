@@ -63,7 +63,7 @@ func (s *Schedule) GetGroups(
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("Successfully got")
+	log.Info("Successfully got groups list")
 
 	return groups, nil
 }
@@ -90,7 +90,7 @@ func (s *Schedule) GetSubjects(
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("Successfully got")
+	log.Info("Successfully got group subjects")
 
 	return subjects, nil
 }
