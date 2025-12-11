@@ -13,7 +13,7 @@ func (c *Client) GetSubjects(
 	ctx context.Context,
 	group models.Group,
 ) ([]string, error) {
-	const op = "schedule.GetSubjects"
+	const op = "mirea.GetSubjects"
 
 	// Создаем запрос
 	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"ical/1/"+fmt.Sprint(group.ID), nil)

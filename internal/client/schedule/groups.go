@@ -18,7 +18,7 @@ func (c *Client) GetGroups(
 	ctx context.Context,
 	group string,
 ) ([]models.Group, error) {
-	const op = "schedule.GetGroup"
+	const op = "mirea.GetGroups"
 
 	// Создаем запрос
 	req, err := http.NewRequestWithContext(ctx, "GET", scheduleUrl+"search?match"+url.QueryEscape(group), nil)
