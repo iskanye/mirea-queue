@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	PractisePrefix    = "SUMMARY:ПР " // Префикс практики
-	LecturePrefix     = "SUMMARY:ЛК " // Префикс лекции
-	IndependentPrefix = "SUMMARY:СР " // Префикс самостоятельной работы
+	PractisePrefix    = "SUMMARY:ПР" // Префикс практики
+	LecturePrefix     = "SUMMARY:ЛК" // Префикс лекции
+	IndependentPrefix = "SUMMARY:СР" // Префикс самостоятельной работы
 
 	PrefixLen = 13 // Длина префиксов в байтах
 )
@@ -42,7 +42,7 @@ func (d *Decoder) Decode() ([]string, error) {
 			strings.HasPrefix(line, IndependentPrefix) {
 			// Если строка имеет префикс предмета записываем ее
 			isSubject = true
-			subject.WriteString(line[PrefixLen-1:])
+			subject.WriteString(line[PrefixLen:])
 		} else if isSubject && strings.HasPrefix(line, " ") {
 			// Сами предметы могут состоять из множества линий,
 			// об этом свидетельствует пробел

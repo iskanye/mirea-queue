@@ -135,7 +135,10 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	subjectMarkup := &telebot.ReplyMarkup{}
 	btns := make([]telebot.Btn, len(subjects))
 	for i := range subjects {
-		btns[i] = subjectMarkup.Data(subjects[i], b.subjectBtnUnique, subjects[i])
+		// В качестве полезной нагрузки возьмём первое слово названия дисциплины
+		// TODO: #17 Придумать способ хранения callback_data по-лучше для кнопок
+		data, _, _ := strings.Cut(subjects[i], " ")
+		btns[i] = subjectMarkup.Data(subjects[i], b.subjectBtnUnique, data)
 	}
 	subjectMarkup.Inline(
 		subjectMarkup.Split(1, btns)...,
@@ -150,6 +153,8 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	ch := make(chan string, 1)
 	b.channels[c.Chat().ID] = ch
 	subject := <-ch
+	close(ch)
+	delete(b.channels, c.Chat().ID)
 
 	err = c.Bot().Delete(msg)
 	if err != nil {
@@ -175,9 +180,7 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 
 // Обработчик кнопки выбора предмета
 func (b *Bot) ChooseSubjectButton(c telebot.Context) error {
-	ch := b.channels[c.Chat().ID]
-	ch <- c.Data()
-	close(ch)
+	b.channels[c.Chat().ID] <- c.Data()
 	return nil
 }
 
@@ -188,7 +191,7 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString("Очередь: " + queue.Key())
+	sb.WriteString("Очередь " + queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
