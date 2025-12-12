@@ -119,41 +119,68 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 
 // Выбрать предмет
 func (b *Bot) ChooseSubject(c telebot.Context) error {
-	err := b.Dialogue(c, func(ch <-chan *telebot.Message, c telebot.Context) error {
-		msg, err := c.Bot().Send(c.Chat(), "Введите название учебной дисциплины")
-		if err != nil {
-			return err
-		}
-
-		subjectMsg := <-ch
-
-		err = c.Bot().Delete(msg)
-		if err != nil {
-			return err
-		}
-
-		user := c.Get("user").(models.User)
-
-		queue := models.Queue{
-			Group:   user.Group,
-			Subject: subjectMsg.Text,
-		}
-
-		entry := models.QueueEntry{
-			ChatID: fmt.Sprint(c.Chat().ID),
-		}
-
-		err = b.queueService.SaveToCache(b.ctx, c.Chat().ID, queue)
-		if err != nil {
-			return err
-		}
-
-		return b.showSubject(c, queue, entry)
-	})
+	user := c.Get("user").(models.User)
+	groups, err := b.scheduleService.GetGroups(b.ctx, user.Group)
 	if err != nil {
 		return err
 	}
 
+	// Группа гарантировано будет одна
+	subjects, err := b.scheduleService.GetSubjects(b.ctx, groups[0])
+	if err != nil {
+		return err
+	}
+
+	// Создаю кнопки под сообщением
+	subjectMarkup := &telebot.ReplyMarkup{}
+	btns := make([]telebot.Btn, len(subjects))
+	for i := range subjects {
+		// В качестве полезной нагрузки возьмём первое слово названия дисциплины
+		// TODO: #17 Придумать способ хранения callback_data по-лучше для кнопок
+		data, _, _ := strings.Cut(subjects[i], " ")
+		btns[i] = subjectMarkup.Data(subjects[i], b.subjectBtnUnique, data)
+	}
+	subjectMarkup.Inline(
+		subjectMarkup.Split(1, btns)...,
+	)
+
+	msg, err := c.Bot().Send(c.Chat(), "Выберите учебную дисциплину", subjectMarkup)
+	if err != nil {
+		return err
+	}
+
+	// Получаем название дисциплины
+	ch := make(chan string, 1)
+	b.channels[c.Chat().ID] = ch
+	subject := <-ch
+	close(ch)
+	delete(b.channels, c.Chat().ID)
+
+	err = c.Bot().Delete(msg)
+	if err != nil {
+		return err
+	}
+
+	queue := models.Queue{
+		Group:   user.Group,
+		Subject: subject,
+	}
+
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	err = b.queueService.SaveToCache(b.ctx, c.Chat().ID, queue)
+	if err != nil {
+		return err
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
+// Обработчик кнопки выбора предмета
+func (b *Bot) ChooseSubjectButton(c telebot.Context) error {
+	b.channels[c.Chat().ID] <- c.Data()
 	return nil
 }
 
@@ -164,7 +191,7 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString("Очередь: " + queue.Key())
+	sb.WriteString("Очередь " + queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {

@@ -87,3 +87,17 @@ type UsersService interface {
 type AdminService interface {
 	ValidateToken(string) bool
 }
+
+// Сервис расписания и групп
+type ScheduleService interface {
+	// Получает список доступных групп в расписании по названию группы
+	GetGroups(
+		ctx context.Context,
+		group string,
+	) ([]models.Group, error)
+	// Получает предметы конкретной группы
+	GetSubjects(
+		ctx context.Context,
+		group models.Group,
+	) ([]string, error)
+}

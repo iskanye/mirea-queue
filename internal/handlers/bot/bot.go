@@ -16,11 +16,18 @@ type Bot struct {
 	subjectMenu      *telebot.ReplyMarkup
 	subjectAdminMenu *telebot.ReplyMarkup
 
-	channels map[int64]chan *telebot.Message
+	// id для кнопок выбора группы и предмета
+	groupBtnUnique   string
+	subjectBtnUnique string
 
-	queueService interfaces.QueueService
-	usersService interfaces.UsersService
-	adminService interfaces.AdminService
+	// Каналы для внутренней связи между обработчиками.
+	// У каждого пользователя есть не более одного канала
+	channels map[int64]chan string
+
+	queueService    interfaces.QueueService
+	usersService    interfaces.UsersService
+	adminService    interfaces.AdminService
+	scheduleService interfaces.ScheduleService
 }
 
 func New(
@@ -29,9 +36,12 @@ func New(
 	startMenu *telebot.ReplyMarkup,
 	subjectMenu *telebot.ReplyMarkup,
 	subjectAdminMenu *telebot.ReplyMarkup,
+	groupBtnUnique string,
+	subjectBtnUnique string,
 	queueService interfaces.QueueService,
 	usersService interfaces.UsersService,
 	adminService interfaces.AdminService,
+	scheduleService interfaces.ScheduleService,
 ) *Bot {
 	return &Bot{
 		log: log,
@@ -41,18 +51,22 @@ func New(
 		subjectMenu:      subjectMenu,
 		subjectAdminMenu: subjectAdminMenu,
 
-		channels: make(map[int64]chan *telebot.Message),
+		channels: make(map[int64]chan string),
 
-		queueService: queueService,
-		usersService: usersService,
-		adminService: adminService,
+		groupBtnUnique:   groupBtnUnique,
+		subjectBtnUnique: subjectBtnUnique,
+
+		queueService:    queueService,
+		usersService:    usersService,
+		adminService:    adminService,
+		scheduleService: scheduleService,
 	}
 }
 
 // Обрабатывает текстовый ввод пользователя
 func (b *Bot) OnText(c telebot.Context) error {
 	if ch, ok := b.channels[c.Chat().ID]; ok {
-		ch <- c.Message()
+		ch <- c.Message().Text
 
 		err := c.Bot().Delete(c.Message())
 		if err != nil {
@@ -71,10 +85,10 @@ func (b *Bot) OnText(c telebot.Context) error {
 // Ввод пользователя передается через канал ch
 func (b *Bot) Dialogue(
 	c telebot.Context,
-	fun func(ch <-chan *telebot.Message, c telebot.Context) error,
+	fun func(ch <-chan string, c telebot.Context) error,
 ) error {
 	chatID := c.Chat().ID
-	ch := make(chan *telebot.Message, 1)
+	ch := make(chan string, 1)
 	b.channels[chatID] = ch
 
 	defer func(cmd string) {
