@@ -8,6 +8,9 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
+// Переменная для создания кнопок
+var markup = tele.ReplyMarkup{}
+
 type Bot struct {
 	b *tele.Bot
 
@@ -52,36 +55,38 @@ func New(
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Кнопки
+	editBtn := markup.Data("Изменить", "edit")
+	chooseBtn := markup.Data("Очереди", "choose")
+	returnBtn := markup.Data("Назад", "return")
+	refreshBtn := markup.Data("Обновить", "update")
+	pushBtn := markup.Data("Записаться", "push")
+	popBtn := markup.Data("Позвать на сдачу", "pop")
+	clearBtn := markup.Data("Очистить очередь", "clear")
+	letAheadBtn := markup.Data("Пропустить в очереди", "let-ahead")
+
 	// Меню /start
 	startMenu := &tele.ReplyMarkup{}
-	editBtn := startMenu.Data("Изменить", "edit")
-	chooseBtn := startMenu.Data("Очереди", "choose")
 	startMenu.Inline(
-		startMenu.Row(editBtn, chooseBtn),
+		markup.Row(editBtn, chooseBtn),
 	)
 
 	// Меню предмета
 	subjectMenu := &tele.ReplyMarkup{}
-	returnBtn := subjectMenu.Data("Назад", "return")
-	refreshBtn := subjectMenu.Data("Обновить", "update")
-	pushBtn := subjectMenu.Data("Записаться", "push")
-	popBtn := subjectMenu.Data("Позвать на сдачу", "pop")
-	clearBtn := subjectMenu.Data("Очистить очередь", "clear")
-	letAheadBtn := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
-		subjectMenu.Row(returnBtn, refreshBtn),
-		subjectMenu.Row(pushBtn),
-		subjectMenu.Row(letAheadBtn),
+		markup.Row(returnBtn, refreshBtn),
+		markup.Row(pushBtn),
+		markup.Row(letAheadBtn),
 	)
 
 	// Админ меню
 	subjectAdminMenu := &tele.ReplyMarkup{}
 	subjectAdminMenu.Inline(
-		subjectAdminMenu.Row(returnBtn, refreshBtn),
-		subjectAdminMenu.Row(pushBtn),
-		subjectAdminMenu.Row(letAheadBtn),
-		subjectAdminMenu.Row(popBtn),
-		subjectAdminMenu.Row(clearBtn),
+		markup.Row(returnBtn, refreshBtn),
+		markup.Row(pushBtn),
+		markup.Row(letAheadBtn),
+		markup.Row(popBtn),
+		markup.Row(clearBtn),
 	)
 
 	return &Bot{
