@@ -19,6 +19,7 @@ type BotHandlers interface {
 	Push(telebot.Context) error
 	Pop(telebot.Context) error
 	LetAhead(telebot.Context) error
+	Clear(telebot.Context) error
 }
 
 type BotMiddlewares interface {
