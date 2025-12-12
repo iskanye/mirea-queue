@@ -19,8 +19,9 @@ type Bot struct {
 	returnBtn   *tele.Btn
 	refreshBtn  *tele.Btn
 	pushBtn     *tele.Btn
-	popBtn      *tele.Btn
 	letAheadBtn *tele.Btn
+	popBtn      *tele.Btn
+	clearBtn    *tele.Btn
 
 	// id для кнопок выбора группы и предмета
 	groupBtnUnique   string
@@ -65,6 +66,7 @@ func New(
 	refreshBtn := subjectMenu.Data("Обновить", "update")
 	pushBtn := subjectMenu.Data("Записаться", "push")
 	popBtn := subjectMenu.Data("Позвать на сдачу", "pop")
+	clearBtn := subjectMenu.Data("Очистить очередь", "clear")
 	letAheadBtn := subjectMenu.Data("Пропустить в очереди", "let-ahead")
 	subjectMenu.Inline(
 		subjectMenu.Row(returnBtn, refreshBtn),
@@ -77,8 +79,9 @@ func New(
 	subjectAdminMenu.Inline(
 		subjectAdminMenu.Row(returnBtn, refreshBtn),
 		subjectAdminMenu.Row(pushBtn),
-		subjectAdminMenu.Row(popBtn),
 		subjectAdminMenu.Row(letAheadBtn),
+		subjectAdminMenu.Row(popBtn),
+		subjectAdminMenu.Row(clearBtn),
 	)
 
 	return &Bot{
@@ -92,8 +95,9 @@ func New(
 		returnBtn:   &returnBtn,
 		refreshBtn:  &refreshBtn,
 		pushBtn:     &pushBtn,
-		popBtn:      &popBtn,
 		letAheadBtn: &letAheadBtn,
+		popBtn:      &popBtn,
+		clearBtn:    &clearBtn,
 
 		subjectAdminMenu: subjectAdminMenu,
 
@@ -147,6 +151,7 @@ func (b *Bot) Register(
 
 		// Нужны права админа
 		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)
+		authorized.Handle(b.clearBtn, handlers.Clear, middlewares.GetQueue, middlewares.GetPermissions)
 	}
 
 	// Обработчик любого текста

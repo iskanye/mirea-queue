@@ -24,7 +24,6 @@ type QueueService interface {
 	Clear(
 		ctx context.Context,
 		queue models.Queue,
-		key string,
 	) error
 	// Получает текущую позицию пользователя в очереди
 	Pos(

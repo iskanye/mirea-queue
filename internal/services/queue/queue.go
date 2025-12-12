@@ -126,7 +126,6 @@ func (q *Queue) Pop(
 func (q *Queue) Clear(
 	ctx context.Context,
 	queue models.Queue,
-	key string,
 ) error {
 	const op = "queue.Clear"
 

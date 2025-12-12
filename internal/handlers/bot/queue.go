@@ -184,6 +184,21 @@ func (b *Bot) ChooseSubjectButton(c telebot.Context) error {
 	return nil
 }
 
+// Очищает очередь
+func (b *Bot) Clear(c telebot.Context) error {
+	queue := c.Get("queue").(models.Queue)
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	err := b.queueService.Clear(b.ctx, queue)
+	if err != nil {
+		return nil
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
 // Выводит на экран информацию об очереди
 func (b *Bot) showSubject(
 	c telebot.Context,
