@@ -148,10 +148,8 @@ func (b *Bot) Register(
 		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
-
-		// Нужны права админа
-		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue, middlewares.GetPermissions)
-		authorized.Handle(b.clearBtn, handlers.Clear, middlewares.GetQueue, middlewares.GetPermissions)
+		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue)
+		authorized.Handle(b.clearBtn, handlers.Clear, middlewares.GetQueue)
 	}
 
 	// Обработчик любого текста
