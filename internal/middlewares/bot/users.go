@@ -12,9 +12,8 @@ func (b *Bot) GetUser(handler telebot.HandlerFunc) telebot.HandlerFunc {
 		user, err := b.usersService.GetUser(b.ctx, c.Chat().ID)
 		if errors.Is(err, services.ErrNotFound) {
 			return c.Send("Вы не зарегистрированы в системе")
-		}
-		if err != nil {
-			return nil
+		} else if err != nil {
+			return err
 		}
 
 		c.Set("user", user)

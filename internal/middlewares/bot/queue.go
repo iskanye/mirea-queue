@@ -12,9 +12,8 @@ func (b *Bot) GetQueue(handler telebot.HandlerFunc) telebot.HandlerFunc {
 		queue, err := b.queueService.GetFromCache(b.ctx, c.Chat().ID)
 		if errors.Is(err, services.ErrNotFound) {
 			return c.Send("Предмет не найден, попробуйте указать его снова")
-		}
-		if err != nil {
-			return nil
+		} else if err != nil {
+			return err
 		}
 
 		c.Set("queue", queue)

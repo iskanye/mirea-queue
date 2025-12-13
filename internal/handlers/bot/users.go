@@ -59,6 +59,7 @@ func (b *Bot) Edit(c tele.Context) error {
 // Вернуться на главную страницу
 func (b *Bot) Return(c tele.Context) error {
 	user := c.Get("user").(models.User)
+	c.Set("msg", c.Message())
 	return b.showProfile(c, user)
 }
 
@@ -149,13 +150,14 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 
 // Функция отображения профиля
 func (b *Bot) showProfile(c tele.Context, user models.User) error {
-	msg := fmt.Sprintf(
+	profile := fmt.Sprintf(
 		"Группа: %s\nФИО: %s\nПрава админа: %t",
 		user.Group, user.Name, user.QueueAccess,
 	)
-	if c.Callback() != nil {
-		return c.Edit(msg, b.startMenu)
+	if msg, ok := c.Get("msg").(tele.Editable); ok {
+		_, err := c.Bot().Edit(msg, profile, b.startMenu)
+		return err
 	} else {
-		return c.Send(msg, b.startMenu)
+		return c.Send(profile, b.startMenu)
 	}
 }
