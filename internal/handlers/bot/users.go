@@ -64,17 +64,14 @@ func (b *Bot) Return(c tele.Context) error {
 
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
-	var user models.User
-	var err error
-
 	if c.Callback() != nil {
-		err = c.Delete()
+		err := c.Delete()
 		if err != nil {
 			return models.User{}, err
 		}
 	}
 
-	err = c.Send("Введите группу")
+	err := c.Send("Введите группу")
 	if err != nil {
 		return models.User{}, err
 	}
@@ -120,6 +117,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	}
 
 	// Читаем оставшиеся данные
+	var user models.User
 	err = b.Dialogue(c, func(ch <-chan string, c tele.Context) error {
 		err = c.Send("Введите своё имя и фамилию")
 		if err != nil {
