@@ -31,7 +31,7 @@ func (b *Bot) Start(c tele.Context) error {
 		return err
 	}
 
-	return nil
+	return b.showProfile(c, user)
 }
 
 func (b *Bot) ChooseGroup(c tele.Context) error {
@@ -42,6 +42,11 @@ func (b *Bot) ChooseGroup(c tele.Context) error {
 }
 
 func (b *Bot) Edit(c tele.Context) error {
+	err := c.Delete()
+	if err != nil {
+		return err
+	}
+
 	// Получаем новые данные пользователя
 	user, err := b.getUser(c)
 	if err != nil {
@@ -53,7 +58,7 @@ func (b *Bot) Edit(c tele.Context) error {
 		return err
 	}
 
-	return c.Delete()
+	return b.showProfile(c, user)
 }
 
 // Вернуться на главную страницу
@@ -65,10 +70,19 @@ func (b *Bot) Return(c tele.Context) error {
 
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
-	var err error
+	// Получаем данные юзера, если они есть значит что пользователь
+	// меняет свои данные, в переменной ok храним меняет ли пользователь данные
+	user, ok := c.Get("user").(models.User)
 
-	if c.Callback() != nil {
-		err = c.Edit("Введите группу")
+	// Если данные изменяют добавляем опцию вернуть те же данные
+	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
+	menu.Reply(
+		menu.Row(menu.Text(user.Group)),
+	)
+
+	var err error
+	if ok {
+		err = c.Send("Введите группу", menu)
 	} else {
 		err = c.Send("Введите группу")
 	}
@@ -117,16 +131,27 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	}
 
 	// Читаем оставшиеся данные
-	var user models.User
 	err = b.Dialogue(c, func(ch <-chan string, c tele.Context) error {
-		err = c.Send("Введите своё имя и фамилию")
+		var err error
+
+		menu.Reply(
+			menu.Row(menu.Text(user.Name)),
+		)
+
+		if ok {
+			err = c.Send("Введите своё имя и фамилию", menu)
+		} else {
+			err = c.Send("Введите своё имя и фамилию")
+		}
 		if err != nil {
 			return err
 		}
 
 		username := <-ch
 
-		err = c.Send("Введите токен админа(если есть)")
+		noMenu := &tele.ReplyMarkup{RemoveKeyboard: true}
+
+		err = c.Send("Введите токен админа(если есть)", noMenu)
 		if err != nil {
 			return err
 		}
@@ -139,7 +164,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 			QueueAccess: b.adminService.ValidateToken(strings.TrimSpace(token)),
 		}
 
-		return b.showProfile(c, user)
+		return nil
 	})
 	if err != nil {
 		return models.User{}, err
