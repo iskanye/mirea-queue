@@ -68,10 +68,13 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var err error
 
 	if c.Callback() != nil {
-		err = c.Edit("Введите группу")
-	} else {
-		err = c.Send("Введите группу")
+		err = c.Delete()
+		if err != nil {
+			return models.User{}, err
+		}
 	}
+
+	err = c.Send("Введите группу")
 	if err != nil {
 		return models.User{}, err
 	}
