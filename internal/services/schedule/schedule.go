@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/iskanye/mirea-queue/internal/client/schedule"
 	"github.com/iskanye/mirea-queue/internal/interfaces"
@@ -89,6 +90,9 @@ func (s *Schedule) GetSubjects(
 
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	// Сортирую предметы, чтобы порядок был всегда постоянным
+	slices.Sort(subjects)
 
 	log.Info("Successfully got group subjects")
 
