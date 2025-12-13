@@ -64,14 +64,13 @@ func (b *Bot) Return(c tele.Context) error {
 
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
-	if c.Callback() != nil {
-		err := c.Delete()
-		if err != nil {
-			return models.User{}, err
-		}
-	}
+	var err error
 
-	err := c.Send("Введите группу")
+	if c.Callback() != nil {
+		err = c.Edit("Введите группу")
+	} else {
+		err = c.Send("Введите группу")
+	}
 	if err != nil {
 		return models.User{}, err
 	}
