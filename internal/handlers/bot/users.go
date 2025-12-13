@@ -59,20 +59,19 @@ func (b *Bot) Edit(c tele.Context) error {
 // Вернуться на главную страницу
 func (b *Bot) Return(c tele.Context) error {
 	user := c.Get("user").(models.User)
-
-	err := c.Delete()
-	if err != nil {
-		return err
-	}
-
 	return b.showProfile(c, user)
 }
 
 // Функция получения пользователя из ввода
 func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	var user models.User
+	var err error
 
-	msg, err := c.Bot().Send(c.Chat(), "Введите группу")
+	if c.Callback() != nil {
+		err = c.Edit("Введите группу")
+	} else {
+		err = c.Send("Введите группу")
+	}
 	if err != nil {
 		return models.User{}, err
 	}
@@ -86,7 +85,10 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 		groups, err := b.scheduleService.GetGroups(b.ctx, i)
 		// Группа не найдена в расписании
 		if errors.Is(err, services.ErrNotFound) {
-			msg, err = c.Bot().Edit(msg, "Данная группа не найдена. Попробуйте ещё раз")
+			err = c.Send("Данная группа не найдена. Попробуйте ещё раз")
+			if err != nil {
+				return models.User{}, err
+			}
 			continue
 		} else if err != nil {
 			return models.User{}, err
@@ -108,7 +110,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 			groupMarkup.Split(1, btns)...,
 		)
 
-		msg, err = c.Bot().Edit(msg, "Выберите группу", groupMarkup)
+		err = c.Send("Выберите группу", groupMarkup)
 		if err != nil && !errors.Is(err, tele.ErrSameMessageContent) {
 			return models.User{}, err
 		}
@@ -116,24 +118,19 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 
 	// Читаем оставшиеся данные
 	err = b.Dialogue(c, func(ch <-chan string, c tele.Context) error {
-		msg, err = c.Bot().Edit(msg, "Введите своё имя и фамилию")
+		err = c.Send("Введите своё имя и фамилию")
 		if err != nil {
 			return err
 		}
 
 		username := <-ch
 
-		msg, err = c.Bot().Edit(msg, "Введите токен админа(если есть)")
+		err = c.Send("Введите токен админа(если есть)")
 		if err != nil {
 			return err
 		}
 
 		token := <-ch
-
-		err = c.Bot().Delete(msg)
-		if err != nil {
-			return err
-		}
 
 		user = models.User{
 			Name:        strings.TrimSpace(username),
@@ -152,8 +149,13 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 
 // Функция отображения профиля
 func (b *Bot) showProfile(c tele.Context, user models.User) error {
-	return c.Send(fmt.Sprintf(
+	msg := fmt.Sprintf(
 		"Группа: %s\nФИО: %s\nПрава админа: %t",
 		user.Group, user.Name, user.QueueAccess,
-	), b.startMenu)
+	)
+	if c.Callback() != nil {
+		return c.Edit(msg, b.startMenu)
+	} else {
+		return c.Send(msg, b.startMenu)
+	}
 }

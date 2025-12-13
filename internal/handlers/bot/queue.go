@@ -144,7 +144,7 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 		subjectMarkup.Split(1, btns)...,
 	)
 
-	msg, err := c.Bot().Send(c.Chat(), "Выберите учебную дисциплину", subjectMarkup)
+	err = c.Edit("Выберите учебную дисциплину", subjectMarkup)
 	if err != nil {
 		return err
 	}
@@ -155,11 +155,6 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	subject := <-ch
 	close(ch)
 	delete(b.channels, c.Chat().ID)
-
-	err = c.Bot().Delete(msg)
-	if err != nil {
-		return err
-	}
 
 	queue := models.Queue{
 		Group:   user.Group,

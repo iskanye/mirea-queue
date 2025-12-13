@@ -67,11 +67,6 @@ func New(
 func (b *Bot) OnText(c telebot.Context) error {
 	if ch, ok := b.channels[c.Chat().ID]; ok {
 		ch <- c.Message().Text
-
-		err := c.Bot().Delete(c.Message())
-		if err != nil {
-			return err
-		}
 		return nil
 	}
 
