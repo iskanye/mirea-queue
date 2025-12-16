@@ -14,11 +14,9 @@ var markup = tele.ReplyMarkup{}
 type Bot struct {
 	b *tele.Bot
 
-	startMenu *tele.ReplyMarkup
-	editBtn   *tele.Btn
-	chooseBtn *tele.Btn
-
-	subjectMenu *tele.ReplyMarkup
+	// Кнопки
+	editBtn     *tele.Btn
+	chooseBtn   *tele.Btn
 	returnBtn   *tele.Btn
 	refreshBtn  *tele.Btn
 	pushBtn     *tele.Btn
@@ -27,11 +25,14 @@ type Bot struct {
 	clearBtn    *tele.Btn
 	removeBtn   *tele.Btn
 
+	// Менюшки
+	startMenu        *tele.ReplyMarkup
+	subjectMenu      *tele.ReplyMarkup
+	subjectAdminMenu *tele.ReplyMarkup
+
 	// id для кнопок выбора группы и предмета
 	groupBtnUnique   string
 	subjectBtnUnique string
-
-	subjectAdminMenu *tele.ReplyMarkup
 
 	cancel context.CancelFunc
 }
@@ -96,11 +97,8 @@ func New(
 	return &Bot{
 		b: b,
 
-		startMenu: startMenu,
-		editBtn:   &editBtn,
-		chooseBtn: &chooseBtn,
-
-		subjectMenu: subjectMenu,
+		editBtn:     &editBtn,
+		chooseBtn:   &chooseBtn,
 		returnBtn:   &returnBtn,
 		refreshBtn:  &refreshBtn,
 		pushBtn:     &pushBtn,
@@ -109,6 +107,8 @@ func New(
 		clearBtn:    &clearBtn,
 		removeBtn:   &removeBtn,
 
+		startMenu:        startMenu,
+		subjectMenu:      subjectMenu,
 		subjectAdminMenu: subjectAdminMenu,
 
 		groupBtnUnique:   groupBtnUnique,
