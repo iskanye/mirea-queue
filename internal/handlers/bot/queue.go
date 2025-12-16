@@ -188,7 +188,24 @@ func (b *Bot) Clear(c telebot.Context) error {
 
 	err := b.queueService.Clear(b.ctx, queue)
 	if err != nil {
-		return nil
+		return err
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
+// Удаляет пользователя из очереди
+func (b *Bot) Remove(c telebot.Context) error {
+	queue := c.Get("queue").(models.Queue)
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	err := b.queueService.Remove(b.ctx, queue, entry)
+	if errors.Is(err, services.ErrNotFound) {
+		return c.Send("Вы не записаны в очередь")
+	} else if err != nil {
+		return err
 	}
 
 	return b.showSubject(c, queue, entry)
