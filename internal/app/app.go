@@ -48,7 +48,7 @@ func New(
 
 	client := scheduleClient.New()
 
-	queue := queue.New(log, QueueRange, redis, redis, redis, redis, redis, redis)
+	queue := queue.New(log, QueueRange, redis, redis, redis, redis, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 	admin := admin.New(log, cfg)
 	schedule := schedule.New(log, GroupRange, client, client)

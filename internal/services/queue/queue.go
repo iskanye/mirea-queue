@@ -18,11 +18,12 @@ type Queue struct {
 	// Пагинация очереди
 	queueRange int64
 
-	queue       interfaces.Queue
-	queueViewer interfaces.QueueViewer
-	queuePos    interfaces.QueuePosition
-	queueLength interfaces.QueueLength
-	queueSwap   interfaces.QueueSwap
+	queue        interfaces.Queue
+	queueViewer  interfaces.QueueViewer
+	queuePos     interfaces.QueuePosition
+	queueLength  interfaces.QueueLength
+	queueSwap    interfaces.QueueSwap
+	queueRemover interfaces.QueueRemover
 
 	cache interfaces.Cache
 }
@@ -35,6 +36,7 @@ func New(
 	queuePos interfaces.QueuePosition,
 	queueLength interfaces.QueueLength,
 	queueSwap interfaces.QueueSwap,
+	queueRemover interfaces.QueueRemover,
 	cache interfaces.Cache,
 ) *Queue {
 	return &Queue{
@@ -42,11 +44,12 @@ func New(
 
 		queueRange: queueRange,
 
-		queue:       queue,
-		queueViewer: queueViewer,
-		queuePos:    queuePos,
-		queueLength: queueLength,
-		queueSwap:   queueSwap,
+		queue:        queue,
+		queueViewer:  queueViewer,
+		queuePos:     queuePos,
+		queueLength:  queueLength,
+		queueSwap:    queueSwap,
+		queueRemover: queueRemover,
 
 		cache: cache,
 	}

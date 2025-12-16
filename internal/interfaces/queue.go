@@ -52,3 +52,11 @@ type QueueSwap interface {
 		entry models.QueueEntry,
 	) error
 }
+
+type QueueRemover interface {
+	Remove(
+		ctx context.Context,
+		queue models.Queue,
+		entry models.QueueEntry,
+	) error
+}
