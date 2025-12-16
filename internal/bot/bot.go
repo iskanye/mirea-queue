@@ -25,6 +25,7 @@ type Bot struct {
 	letAheadBtn *tele.Btn
 	popBtn      *tele.Btn
 	clearBtn    *tele.Btn
+	removeBtn   *tele.Btn
 
 	// id для кнопок выбора группы и предмета
 	groupBtnUnique   string
@@ -64,6 +65,7 @@ func New(
 	popBtn := markup.Data("Позвать на сдачу", "pop")
 	clearBtn := markup.Data("Очистить очередь", "clear")
 	letAheadBtn := markup.Data("Пропустить в очереди", "let-ahead")
+	removeBtn := markup.Data("Выйти из очереди", "remove")
 
 	// Меню /start
 	startMenu := &tele.ReplyMarkup{}
@@ -77,6 +79,7 @@ func New(
 		markup.Row(returnBtn, refreshBtn),
 		markup.Row(pushBtn),
 		markup.Row(letAheadBtn),
+		markup.Row(removeBtn),
 	)
 
 	// Админ меню
@@ -85,6 +88,7 @@ func New(
 		markup.Row(returnBtn, refreshBtn),
 		markup.Row(pushBtn),
 		markup.Row(letAheadBtn),
+		markup.Row(removeBtn),
 		markup.Row(popBtn),
 		markup.Row(clearBtn),
 	)
@@ -103,6 +107,7 @@ func New(
 		letAheadBtn: &letAheadBtn,
 		popBtn:      &popBtn,
 		clearBtn:    &clearBtn,
+		removeBtn:   &removeBtn,
 
 		subjectAdminMenu: subjectAdminMenu,
 
@@ -156,6 +161,7 @@ func (b *Bot) Register(
 		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
+		authorized.Handle(b.removeBtn, handlers.Remove, middlewares.GetQueue)
 		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue)
 		authorized.Handle(b.clearBtn, handlers.Clear, middlewares.GetQueue)
 	}

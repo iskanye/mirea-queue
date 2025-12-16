@@ -297,9 +297,6 @@ func (q *Queue) Remove(
 			slog.String("err", err.Error()),
 		)
 
-		if errors.Is(err, repositories.ErrNotFound) {
-			return fmt.Errorf("%s: %w", op, services.ErrNotFound)
-		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

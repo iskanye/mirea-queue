@@ -202,9 +202,7 @@ func (b *Bot) Remove(c telebot.Context) error {
 	}
 
 	err := b.queueService.Remove(b.ctx, queue, entry)
-	if errors.Is(err, services.ErrNotFound) {
-		return c.Send("Вы не записаны в очередь")
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
