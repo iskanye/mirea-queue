@@ -143,8 +143,8 @@ func (b *Bot) Register(
 	handlers interfaces.BotHandlers,
 	middlewares interfaces.BotMiddlewares,
 ) {
-	// Автоматически ответь на колбеки
-	b.b.Use(middlewares.CallbackRespond)
+	// Автоматически отвечать на колбеки и логгировать айдишник
+	b.b.Use(middlewares.CallbackRespond, middlewares.Logger)
 
 	// Функции регистрации пользователя
 	b.b.Handle("/start", handlers.Start)

@@ -24,6 +24,7 @@ type BotHandlers interface {
 }
 
 type BotMiddlewares interface {
+	Logger(telebot.HandlerFunc) telebot.HandlerFunc
 	GetUser(telebot.HandlerFunc) telebot.HandlerFunc
 	GetQueue(telebot.HandlerFunc) telebot.HandlerFunc
 	CallbackRespond(telebot.HandlerFunc) telebot.HandlerFunc
