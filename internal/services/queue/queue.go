@@ -18,11 +18,12 @@ type Queue struct {
 	// Пагинация очереди
 	queueRange int64
 
-	queue       interfaces.Queue
-	queueViewer interfaces.QueueViewer
-	queuePos    interfaces.QueuePosition
-	queueLength interfaces.QueueLength
-	queueSwap   interfaces.QueueSwap
+	queue        interfaces.Queue
+	queueViewer  interfaces.QueueViewer
+	queuePos     interfaces.QueuePosition
+	queueLength  interfaces.QueueLength
+	queueSwap    interfaces.QueueSwap
+	queueRemover interfaces.QueueRemover
 
 	cache interfaces.Cache
 }
@@ -35,6 +36,7 @@ func New(
 	queuePos interfaces.QueuePosition,
 	queueLength interfaces.QueueLength,
 	queueSwap interfaces.QueueSwap,
+	queueRemover interfaces.QueueRemover,
 	cache interfaces.Cache,
 ) *Queue {
 	return &Queue{
@@ -42,11 +44,12 @@ func New(
 
 		queueRange: queueRange,
 
-		queue:       queue,
-		queueViewer: queueViewer,
-		queuePos:    queuePos,
-		queueLength: queueLength,
-		queueSwap:   queueSwap,
+		queue:        queue,
+		queueViewer:  queueViewer,
+		queuePos:     queuePos,
+		queueLength:  queueLength,
+		queueSwap:    queueSwap,
+		queueRemover: queueRemover,
 
 		cache: cache,
 	}
@@ -268,5 +271,36 @@ func (q *Queue) Range(
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	log.Info("Successfully got queue")
+
 	return entries, nil
+}
+
+func (q *Queue) Remove(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	const op = "queue.Remove"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to remove entry from queue")
+
+	err := q.queueRemover.Remove(ctx, queue, entry)
+	if err != nil {
+		log.Error("Failed to remove entry from queue",
+			slog.String("err", err.Error()),
+		)
+
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully removed")
+
+	return nil
 }
