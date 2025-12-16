@@ -170,3 +170,22 @@ func (s *Storage) LetAhead(
 
 	return nil
 }
+
+func (s *Storage) Remove(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	const op = "redis.Remove"
+
+	_, err := s.cl.LRem(ctx, queue.Key(), 1, entry.ChatID).Result()
+	if err != nil {
+		// Списка нет или элемента нет в списке
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
