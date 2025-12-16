@@ -271,5 +271,39 @@ func (q *Queue) Range(
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	log.Info("Successfully got queue")
+
 	return entries, nil
+}
+
+func (q *Queue) Remove(
+	ctx context.Context,
+	queue models.Queue,
+	entry models.QueueEntry,
+) error {
+	const op = "queue.Remove"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to remove entry from queue")
+
+	err := q.queueRemover.Remove(ctx, queue, entry)
+	if err != nil {
+		log.Error("Failed to remove entry from queue",
+			slog.String("err", err.Error()),
+		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully removed")
+
+	return nil
 }

@@ -53,6 +53,12 @@ type QueueService interface {
 		ctx context.Context,
 		chatID int64,
 	) (models.Queue, error)
+	// Удаляет пользователя из очереди
+	Remove(
+		ctx context.Context,
+		queue models.Queue,
+		entry models.QueueEntry,
+	) error
 }
 
 // Сервис пользователей
