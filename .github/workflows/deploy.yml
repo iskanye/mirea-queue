@@ -41,11 +41,12 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         port: ${{ secrets.SSH_PORT }}
         username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd ${{ vars.SERVER_BOT_PATH }}
           docker-compose down
           docker-compose pull
-          docker-compose up -d --build 
+          docker-compose up -d
           docker image prune -f
