@@ -10,6 +10,7 @@ type Config struct {
 	Token      string        `env:"BOT_TOKEN"`
 	BotTimeout time.Duration `env:"BOT_TIMEOUT"`
 	AdminToken string        `env:"ADMIN_TOKEN"`
+	CronTab    string        `env:"CRON_TAB"`
 	Postgres   postgresConfig
 	Redis      redisConfig
 }

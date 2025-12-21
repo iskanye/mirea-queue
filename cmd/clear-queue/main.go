@@ -14,7 +14,9 @@ import (
 )
 
 func main() {
-	// Загружаем московский временной пояс
+	const op = "cron"
+
+	// Загружаем часовой временной пояс
 	location, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
 		panic(err)
@@ -23,7 +25,9 @@ func main() {
 	c := cron.New(cron.WithLocation(location))
 
 	cfg := config.MustLoadConfig()
-	log := slog.Default()
+	log := slog.With(
+		slog.String("op", op),
+	)
 
 	redis, err := redis.New(cfg)
 	if err != nil {
@@ -33,13 +37,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Каждый раз в 6 часов по МСК очищает базу данных очереди
-	_, err = c.AddFunc("0 6 * * *", func() {
+	// Очищает базу данных очереди по заданному правилу
+	_, err = c.AddFunc(cfg.CronTab, func() {
 		err := redis.FlushDB(ctx)
 		if err != nil {
-			log.Error("UNKNOWN ERROR",
+			log.Error("Unknown error",
 				slog.String("err", err.Error()),
 			)
+		} else {
+			log.Info("Flushed database")
 		}
 	})
 	if err != nil {
@@ -50,7 +56,9 @@ func main() {
 	c.Start()
 	defer c.Stop()
 
-	log.Info("Cron started")
+	log.Info("Started",
+		slog.String("crontab", cfg.CronTab),
+	)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
