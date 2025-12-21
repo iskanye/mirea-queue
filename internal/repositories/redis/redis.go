@@ -36,3 +36,16 @@ func New(cfg *config.Config) (*Storage, error) {
 func (s *Storage) Close() error {
 	return s.cl.Close()
 }
+
+func (s *Storage) FlushDB(
+	ctx context.Context,
+) error {
+	const op = "redis.Remove"
+
+	_, err := s.cl.FlushDB(ctx).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}

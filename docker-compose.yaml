@@ -49,6 +49,17 @@ services:
     volumes:
       - ./config:/app/config
 
+  cron:
+    image: iskanye/mirea-queue-cron:latest
+    container_name: queue-cron
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - bot_network
+    restart: unless-stopped
+
 volumes:
   bot_postgres:
   bot_redis:
