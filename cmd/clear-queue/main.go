@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/iskanye/mirea-queue/internal/config"
 	"github.com/iskanye/mirea-queue/internal/repositories/redis"
@@ -16,13 +15,8 @@ import (
 func main() {
 	const op = "cron"
 
-	// Загружаем часовой временной пояс
-	location, err := time.LoadLocation("Europe/Moscow")
-	if err != nil {
-		panic(err)
-	}
-
-	c := cron.New(cron.WithLocation(location))
+	// Загружаем cron
+	c := cron.New()
 
 	cfg := config.MustLoadConfig()
 	log := slog.With(
