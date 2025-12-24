@@ -220,7 +220,7 @@ func (b *Bot) showSubject(
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
-		sb.WriteString("\nОчередь не найдена")
+		sb.WriteString("\nОчередь не создана")
 	} else if err == nil {
 		// Находим имена пользователей
 		for i, entry := range entries {
