@@ -8,6 +8,13 @@
     Бот очереди для РТУ МИРЭА
 </h1>
 
+<div align="center">
+    
+[![License](https://img.shields.io/github/license/iskanye/mirea-queue)](https://github.com/iskanye/mirea-queue/blob/main/LICENSE)
+[![Deploy Status](https://img.shields.io/github/actions/workflow/status/iskanye/mirea-queue/deploy.yml)](https://github.com/iskanye/mirea-queue/actions)
+    
+</div>
+
 <p align="center">
     <b>
         Для тех кому надоели бесконечные очереди, которые противоречат друг другу
