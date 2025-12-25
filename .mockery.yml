@@ -1,18 +1,16 @@
-all: false
-dir: '{{.InterfaceDir}}'
-filename: mocks_test.go
+all: true
+dir: './mocks'
+filename: mocks.go
 force-file-write: true
 formatter: goimports
 generate: true
 include-auto-generated: false
 log-level: info
 structname: '{{.Mock}}{{.InterfaceName}}'
-pkgname: '{{.SrcPackageName}}'
+pkgname: 'mocks'
 recursive: false
 require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
-  github.com/iskanye/mirea-queue:
-    config:
-      all: true
+  github.com/iskanye/mirea-queue/internal/interfaces:

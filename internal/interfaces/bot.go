@@ -2,6 +2,7 @@ package interfaces
 
 import "gopkg.in/telebot.v4"
 
+//mockery:generate: false
 type BotHandlers interface {
 	// Общие обработчики
 	OnText(telebot.Context) error
@@ -23,6 +24,7 @@ type BotHandlers interface {
 	Remove(telebot.Context) error
 }
 
+//mockery:generate: false
 type BotMiddlewares interface {
 	Logger(telebot.HandlerFunc) telebot.HandlerFunc
 	GetUser(telebot.HandlerFunc) telebot.HandlerFunc
