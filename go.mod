@@ -3,6 +3,7 @@ module github.com/iskanye/mirea-queue
 go 1.25.4
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.12.1
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.7.6
