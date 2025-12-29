@@ -134,11 +134,28 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	// Создаю кнопки под сообщением
 	subjectMarkup := &telebot.ReplyMarkup{}
 	btns := make([]telebot.Btn, len(subjects))
+	var btnText strings.Builder
 	for i := range subjects {
 		// В качестве полезной нагрузки возьмём первое слово названия дисциплины
 		// TODO: #17 Придумать способ хранения callback_data по-лучше для кнопок
 		data, _, _ := strings.Cut(subjects[i], " ")
-		btns[i] = subjectMarkup.Data(subjects[i], b.subjectBtnUnique, data)
+
+		queue := models.Queue{
+			Group:   user.Group,
+			Subject: data,
+		}
+
+		// Проверяем, есть ли уже очередь по этому предмету
+		_, err := b.queueService.Range(b.ctx, queue)
+		if err == nil {
+			btnText.WriteRune('✅')
+		} else if errors.Is(err, services.ErrNotFound) {
+			btnText.WriteRune('❌')
+		}
+		btnText.WriteString(subjects[i])
+
+		btns[i] = subjectMarkup.Data(btnText.String(), b.subjectBtnUnique, data)
+		btnText.Reset()
 	}
 	subjectMarkup.Inline(
 		subjectMarkup.Split(1, btns)...,
