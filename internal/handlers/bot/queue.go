@@ -148,9 +148,9 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 		// Проверяем, есть ли уже очередь по этому предмету
 		_, err := b.queueService.Range(b.ctx, queue)
 		if err == nil {
-			btnText.WriteRune('✅')
+			btnText.WriteRune('✅ ')
 		} else if errors.Is(err, services.ErrNotFound) {
-			btnText.WriteRune('❌')
+			btnText.WriteRune('❌ ')
 		}
 		btnText.WriteString(subjects[i])
 
