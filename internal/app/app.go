@@ -18,13 +18,13 @@ import (
 
 const (
 	// Пагинация очереди
-	QueueRange = 10
+	queueRange = 10
 	// Пагинация групп
-	GroupRange = 5
+	groupRange = 5
 
 	// id для кнопок выбора группы и предмета
-	GroupBtnUnique   = "group"
-	SubjectBtnUnique = "bubject"
+	groupBtnUnique   = "group"
+	subjectBtnUnique = "subject"
 )
 
 type App struct {
@@ -48,17 +48,17 @@ func New(
 
 	client := scheduleClient.New()
 
-	queue := queue.New(log, QueueRange, redis, redis, redis, redis, redis, redis, redis)
+	queue := queue.New(log, queueRange, redis, redis, redis, redis, redis, redis, redis)
 	users := users.New(log, postgres, postgres, postgres, postgres)
 	admin := admin.New(log, cfg)
-	schedule := schedule.New(log, GroupRange, client, client)
+	schedule := schedule.New(log, groupRange, client, client)
 
-	bot, ctx := bot.New(cfg, GroupBtnUnique, SubjectBtnUnique)
+	bot, ctx := bot.New(cfg, groupBtnUnique, subjectBtnUnique)
 	handlers := botHandlers.New(log, ctx,
 		bot.StartMenu(),
 		bot.SubjectMenu(),
 		bot.SubjectAdminMenu(),
-		GroupBtnUnique, SubjectBtnUnique,
+		groupBtnUnique, subjectBtnUnique,
 		queue, users, admin, schedule,
 	)
 	middlewares := botMiddlewares.New(log, ctx, queue, users, admin)
