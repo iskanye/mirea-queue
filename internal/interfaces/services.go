@@ -7,6 +7,8 @@ import (
 )
 
 // Сервис очереди
+//
+//mockery:generate: false
 type QueueService interface {
 	// Пушает пользователя в очередь
 	Push(
@@ -62,6 +64,8 @@ type QueueService interface {
 }
 
 // Сервис пользователей
+//
+//mockery:generate: false
 type UsersService interface {
 	// Создает нового пользователя и возвращает его
 	CreateUser(
@@ -89,11 +93,15 @@ type UsersService interface {
 }
 
 // Сервис проверки прав админа
+//
+//mockery:generate: false
 type AdminService interface {
 	ValidateToken(string) bool
 }
 
 // Сервис расписания и групп
+//
+//mockery:generate: false
 type ScheduleService interface {
 	// Получает список доступных групп в расписании по названию группы
 	GetGroups(
