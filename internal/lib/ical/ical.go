@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	PractisePrefix    = "SUMMARY:ПР" // Префикс практики
-	LecturePrefix     = "SUMMARY:ЛК" // Префикс лекции
-	IndependentPrefix = "SUMMARY:СР" // Префикс самостоятельной работы
+	practisePrefix    = "SUMMARY:ПР" // Префикс практики
+	lecturePrefix     = "SUMMARY:ЛК" // Префикс лекции
+	independentPrefix = "SUMMARY:СР" // Префикс самостоятельной работы
 
-	PrefixLen = 13 // Длина префиксов в байтах
+	prefixLen = 13 // Длина префиксов в байтах
 )
 
 type Decoder struct {
@@ -37,12 +37,12 @@ func (d *Decoder) Decode() ([]string, error) {
 
 	for d.s.Scan() {
 		line := d.s.Text()
-		if strings.HasPrefix(line, PractisePrefix) ||
-			strings.HasPrefix(line, LecturePrefix) ||
-			strings.HasPrefix(line, IndependentPrefix) {
+		if strings.HasPrefix(line, practisePrefix) ||
+			strings.HasPrefix(line, lecturePrefix) ||
+			strings.HasPrefix(line, independentPrefix) {
 			// Если строка имеет префикс предмета записываем ее
 			isSubject = true
-			subject.WriteString(line[PrefixLen:])
+			subject.WriteString(line[prefixLen:])
 		} else if isSubject && strings.HasPrefix(line, " ") {
 			// Сами предметы могут состоять из множества линий,
 			// об этом свидетельствует пробел
