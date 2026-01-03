@@ -1,4 +1,4 @@
-package queue
+package queue_test
 
 import (
 	"fmt"
@@ -8,9 +8,12 @@ import (
 	"github.com/iskanye/mirea-queue/internal/models"
 	"github.com/iskanye/mirea-queue/internal/repositories"
 	"github.com/iskanye/mirea-queue/internal/services"
+	"github.com/iskanye/mirea-queue/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var cache *mocks.MockCache
 
 // QueueService.SaveToCache
 

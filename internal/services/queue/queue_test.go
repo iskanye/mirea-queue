@@ -1,4 +1,4 @@
-package queue
+package queue_test
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/iskanye/mirea-queue/internal/models"
 	"github.com/iskanye/mirea-queue/internal/repositories"
 	"github.com/iskanye/mirea-queue/internal/services"
+	"github.com/iskanye/mirea-queue/internal/services/queue"
 	"github.com/iskanye/mirea-queue/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,15 +23,12 @@ const (
 )
 
 var (
-	// НЕ ПУТАТЬ С service, queue - это мок интерфейса Queue,
-	// для тестирования надо вызывать функции переменной service!
-	queue        *mocks.MockQueue
+	queueBase    *mocks.MockQueue
 	queueViewer  *mocks.MockQueueViewer
 	queuePos     *mocks.MockQueuePosition
 	queueLength  *mocks.MockQueueLength
 	queueSwap    *mocks.MockQueueSwap
 	queueRemover *mocks.MockQueueRemover
-	cache        *mocks.MockCache
 )
 
 // Создаем сервис очереди с приклеплёнными к нему моками
@@ -39,7 +37,7 @@ func newService(t *testing.T) (interfaces.QueueService, context.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
-	queue = mocks.NewMockQueue(t)
+	queueBase = mocks.NewMockQueue(t)
 	queueViewer = mocks.NewMockQueueViewer(t)
 	queuePos = mocks.NewMockQueuePosition(t)
 	queueLength = mocks.NewMockQueueLength(t)
@@ -49,7 +47,7 @@ func newService(t *testing.T) (interfaces.QueueService, context.Context) {
 
 	t.Cleanup(func() {
 		// Очищаем ожидаемые вызовы моков
-		queue.ExpectedCalls = nil
+		queueBase.ExpectedCalls = nil
 		queueViewer.ExpectedCalls = nil
 		queuePos.ExpectedCalls = nil
 		queueLength.ExpectedCalls = nil
@@ -59,10 +57,10 @@ func newService(t *testing.T) (interfaces.QueueService, context.Context) {
 		cancel()
 	})
 
-	return New(
+	return queue.New(
 		slog.New(slog.DiscardHandler),
 		queueRange,
-		queue,
+		queueBase,
 		queueViewer,
 		queuePos,
 		queueLength,
@@ -88,7 +86,7 @@ func TestQueuePush_Success(t *testing.T) {
 	}
 
 	expectedPos := int64(1)
-	queue.EXPECT().Push(ctx, subjectQueue, entry).Return(nil)
+	queueBase.EXPECT().Push(ctx, subjectQueue, entry).Return(nil)
 	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(expectedPos, nil)
 
 	pos, err := service.Push(ctx, subjectQueue, entry)
@@ -109,7 +107,7 @@ func TestQueuePush_AlreadyInQueue(t *testing.T) {
 		ChatID: chatID,
 	}
 
-	queue.EXPECT().Push(ctx, subjectQueue, entry).Return(repositories.ErrAlreadyInQueue)
+	queueBase.EXPECT().Push(ctx, subjectQueue, entry).Return(repositories.ErrAlreadyInQueue)
 
 	pos, err := service.Push(ctx, subjectQueue, entry)
 	assert.Error(t, err)
@@ -133,7 +131,7 @@ func TestQueuePop_Success(t *testing.T) {
 	}
 
 	// Попаем айдишник
-	queue.EXPECT().Pop(ctx, subjectQueue).Return(entry, nil)
+	queueBase.EXPECT().Pop(ctx, subjectQueue).Return(entry, nil)
 
 	popedEntry, err := service.Pop(ctx, subjectQueue)
 	require.Empty(t, err)
@@ -149,7 +147,7 @@ func TestQueuePop_NotFound(t *testing.T) {
 	}
 
 	// Попаем и получаем ErrNotFound
-	queue.EXPECT().Pop(ctx, subjectQueue).Return(models.QueueEntry{}, repositories.ErrNotFound)
+	queueBase.EXPECT().Pop(ctx, subjectQueue).Return(models.QueueEntry{}, repositories.ErrNotFound)
 
 	popedEntry, err := service.Pop(ctx, subjectQueue)
 	require.NotEmpty(t, err)
@@ -168,7 +166,7 @@ func TestQueueClear_Success(t *testing.T) {
 	}
 
 	// Очищаем очередь
-	queue.EXPECT().Clear(ctx, subjectQueue).Return(nil)
+	queueBase.EXPECT().Clear(ctx, subjectQueue).Return(nil)
 
 	err := service.Clear(ctx, subjectQueue)
 	require.Empty(t, err)
@@ -182,7 +180,7 @@ func TestQueueClear_NotFound(t *testing.T) {
 		Subject: gofakeit.Noun(),
 	}
 
-	queue.EXPECT().Clear(ctx, subjectQueue).Return(repositories.ErrNotFound)
+	queueBase.EXPECT().Clear(ctx, subjectQueue).Return(repositories.ErrNotFound)
 
 	err := service.Clear(ctx, subjectQueue)
 	require.ErrorIs(t, err, services.ErrNotFound)
