@@ -1,6 +1,7 @@
 package queue_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -55,6 +56,22 @@ func TestSaveToCache_MultipleCalls_Success(t *testing.T) {
 
 	err = service.SaveToCache(ctx, chatID2, queue2)
 	require.Empty(t, err)
+}
+
+func TestSaveToCache_Failure(t *testing.T) {
+	service, ctx := newService(t)
+
+	chatID := gofakeit.Int64()
+	subjectQueue := models.Queue{
+		Group:   gofakeit.ID(),
+		Subject: gofakeit.Noun(),
+	}
+
+	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
+	cache.EXPECT().Set(ctx, fmt.Sprint(chatID), subjectQueue.Key()).Return(expectedErr)
+
+	err := service.SaveToCache(ctx, chatID, subjectQueue)
+	require.ErrorIs(t, err, expectedErr)
 }
 
 // QueueService.GetFromCache
@@ -112,4 +129,17 @@ func TestGetFromCache_MultipleCalls_Success(t *testing.T) {
 	result2, err2 := service.GetFromCache(ctx, chatID2)
 	require.Empty(t, err2)
 	assert.Equal(t, queue2, result2)
+}
+
+func TestGetFromCache_Failure(t *testing.T) {
+	service, ctx := newService(t)
+
+	chatID := gofakeit.Int64()
+
+	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
+	cache.EXPECT().Get(ctx, fmt.Sprint(chatID)).Return("", expectedErr)
+
+	res, err := service.GetFromCache(ctx, chatID)
+	require.ErrorIs(t, err, expectedErr)
+	assert.Empty(t, res)
 }

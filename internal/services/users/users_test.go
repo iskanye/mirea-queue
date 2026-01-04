@@ -56,6 +56,8 @@ func newService(t *testing.T) (interfaces.UsersService, context.Context) {
 	), ctx
 }
 
+// UsersService.Create
+
 func TestUsersCreate_Success(t *testing.T) {
 	service, ctx := newService(t)
 
@@ -86,6 +88,8 @@ func TestUsersCreate_Failure(t *testing.T) {
 	assert.Empty(t, res)
 }
 
+// UsersService.Remove
+
 func TestUsersRemove_Success(t *testing.T) {
 	service, ctx := newService(t)
 
@@ -106,9 +110,10 @@ func TestUsersRemove_Failure(t *testing.T) {
 	userRemover.EXPECT().RemoveUser(ctx, chatID).Return(expectedErr)
 
 	err := service.RemoveUser(ctx, chatID)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, expectedErr)
+	require.ErrorIs(t, err, expectedErr)
 }
+
+// UsersService.Update
 
 func TestUsersUpdate_Success(t *testing.T) {
 	service, ctx := newService(t)
@@ -119,7 +124,7 @@ func TestUsersUpdate_Success(t *testing.T) {
 	userModifier.EXPECT().UpdateUser(ctx, chatID, user).Return(nil)
 
 	res, err := service.UpdateUser(ctx, chatID, user)
-	require.NoError(t, err)
+	require.Empty(t, err)
 	assert.Equal(t, user, res)
 }
 
@@ -133,10 +138,11 @@ func TestUsersUpdate_Failure(t *testing.T) {
 	userModifier.EXPECT().UpdateUser(ctx, chatID, user).Return(expectedErr)
 
 	res, err := service.UpdateUser(ctx, chatID, user)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, expectedErr)
+	require.ErrorIs(t, err, expectedErr)
 	assert.Empty(t, res)
 }
+
+// UsersService.Get
 
 func TestUsersGet_Success(t *testing.T) {
 	service, ctx := newService(t)
@@ -147,7 +153,7 @@ func TestUsersGet_Success(t *testing.T) {
 	userProvider.EXPECT().GetUser(ctx, chatID).Return(user, nil)
 
 	res, err := service.GetUser(ctx, chatID)
-	require.NoError(t, err)
+	require.Empty(t, err)
 	assert.Equal(t, user, res)
 }
 
@@ -159,7 +165,19 @@ func TestUsersGet_NotFound(t *testing.T) {
 	userProvider.EXPECT().GetUser(ctx, chatID).Return(models.User{}, repositories.ErrNotFound)
 
 	res, err := service.GetUser(ctx, chatID)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, services.ErrNotFound)
+	require.ErrorIs(t, err, services.ErrNotFound)
+	assert.Empty(t, res)
+}
+
+func TestUsersGet_Failure(t *testing.T) {
+	service, ctx := newService(t)
+
+	chatID := gofakeit.Int64()
+
+	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
+	userProvider.EXPECT().GetUser(ctx, chatID).Return(models.User{}, expectedErr)
+
+	res, err := service.GetUser(ctx, chatID)
+	require.ErrorIs(t, err, expectedErr)
 	assert.Empty(t, res)
 }
