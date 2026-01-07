@@ -45,9 +45,6 @@ func New(
 	pref := tele.Settings{
 		Token:  cfg.Token,
 		Poller: &tele.LongPoller{Timeout: cfg.BotTimeout},
-		OnError: func(err error, c tele.Context) {
-			c.Send("Произошла неизвестная ошибка: " + err.Error())
-		},
 	}
 
 	b, err := tele.NewBot(pref)
