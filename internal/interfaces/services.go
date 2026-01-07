@@ -15,7 +15,7 @@ type QueueService interface {
 		ctx context.Context,
 		queue models.Queue,
 		entry models.QueueEntry,
-	) (int64, error)
+	) error
 	// Получает пользователя из начала очереди
 	// и удаляет его из очереди
 	Pop(

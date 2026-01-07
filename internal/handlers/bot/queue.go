@@ -30,8 +30,7 @@ func (b *Bot) Push(c telebot.Context) error {
 		ChatID: fmt.Sprint(c.Chat().ID),
 	}
 
-	_, err := b.queueService.Push(b.ctx, queue, entry)
-	if err != nil {
+	if err := b.queueService.Push(b.ctx, queue, entry); err != nil {
 		if errors.Is(err, services.ErrAlreadyInQueue) {
 			return c.Send("Вы уже в очереди")
 		}

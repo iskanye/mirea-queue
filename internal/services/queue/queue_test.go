@@ -86,13 +86,10 @@ func TestQueuePush_Success(t *testing.T) {
 		ChatID: chatID,
 	}
 
-	expectedPos := int64(1)
 	queueBase.EXPECT().Push(ctx, subjectQueue, entry).Return(nil)
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(expectedPos, nil)
 
-	pos, err := service.Push(ctx, subjectQueue, entry)
+	err := service.Push(ctx, subjectQueue, entry)
 	require.Empty(t, err)
-	assert.Equal(t, expectedPos, pos)
 }
 
 func TestQueuePush_AlreadyInQueue(t *testing.T) {
@@ -110,9 +107,8 @@ func TestQueuePush_AlreadyInQueue(t *testing.T) {
 
 	queueBase.EXPECT().Push(ctx, subjectQueue, entry).Return(repositories.ErrAlreadyInQueue)
 
-	pos, err := service.Push(ctx, subjectQueue, entry)
+	err := service.Push(ctx, subjectQueue, entry)
 	require.ErrorIs(t, err, services.ErrAlreadyInQueue)
-	assert.Empty(t, pos)
 }
 
 func TestQueuePush_Failure(t *testing.T) {
@@ -131,9 +127,8 @@ func TestQueuePush_Failure(t *testing.T) {
 	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
 	queueBase.EXPECT().Push(ctx, subjectQueue, entry).Return(expectedErr)
 
-	pos, err := service.Push(ctx, subjectQueue, entry)
+	err := service.Push(ctx, subjectQueue, entry)
 	require.ErrorIs(t, err, expectedErr)
-	assert.Empty(t, pos)
 }
 
 // QueueService.Pop

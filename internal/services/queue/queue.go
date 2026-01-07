@@ -59,7 +59,7 @@ func (q *Queue) Push(
 	ctx context.Context,
 	queue models.Queue,
 	entry models.QueueEntry,
-) (int64, error) {
+) error {
 	const op = "queue.Push"
 
 	log := q.log.With(
@@ -77,22 +77,14 @@ func (q *Queue) Push(
 		)
 
 		if errors.Is(err, repositories.ErrAlreadyInQueue) {
-			return 0, fmt.Errorf("%s: %w", op, services.ErrAlreadyInQueue)
+			return fmt.Errorf("%s: %w", op, services.ErrAlreadyInQueue)
 		}
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-
-	pos, err := q.queuePos.GetPosition(ctx, queue, entry)
-	if err != nil {
-		log.Error("Failed to get entry position",
-			slog.String("err", err.Error()),
-		)
-		return 0, fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("Successfully pushed")
 
-	return pos, nil
+	return nil
 }
 
 func (q *Queue) Pop(

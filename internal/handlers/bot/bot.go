@@ -78,7 +78,7 @@ func (b *Bot) OnText(c telebot.Context) error {
 
 // Оборачивает команду в диалог, ожидая ввода от пользователя.
 // Ввод пользователя передается через канал ch
-func (b *Bot) Dialogue(
+func (b *Bot) dialogue(
 	c telebot.Context,
 	fun func(ch <-chan string, c telebot.Context) error,
 ) error {

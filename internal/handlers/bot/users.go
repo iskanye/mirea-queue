@@ -131,7 +131,7 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 	}
 
 	// Читаем оставшиеся данные
-	err = b.Dialogue(c, func(ch <-chan string, c tele.Context) error {
+	err = b.dialogue(c, func(ch <-chan string, c tele.Context) error {
 		var err error
 
 		menu.Reply(
