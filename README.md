@@ -11,7 +11,8 @@
 <div align="center">
     
 [![License](https://img.shields.io/github/license/iskanye/mirea-queue)](https://github.com/iskanye/mirea-queue/blob/main/LICENSE)
-[![Deploy Status](https://img.shields.io/github/actions/workflow/status/iskanye/mirea-queue/deploy.yml)](https://github.com/iskanye/mirea-queue/actions)
+[![Tests Status](https://img.shields.io/github/actions/workflow/status/iskanye/mirea-queue/tests.yml?label=tests)](https://github.com/iskanye/mirea-queue/actions/workflows/tests.yml)
+[![Deploy Status](https://img.shields.io/github/actions/workflow/status/iskanye/mirea-queue/deploy.yml)](https://github.com/iskanye/mirea-queue/actions/workflows/deploy.yml)
     
 </div>
 
