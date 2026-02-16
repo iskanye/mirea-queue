@@ -175,14 +175,21 @@ func (b *Bot) getUser(c tele.Context) (models.User, error) {
 
 // Функция отображения профиля
 func (b *Bot) showProfile(c tele.Context, user models.User) error {
-	profile := fmt.Sprintf(
-		"Группа: %s\nФИО: %s\nПрава админа: %t",
-		user.Group, user.Name, user.QueueAccess,
+	var profileStr strings.Builder
+	fmt.Fprintf(
+		&profileStr,
+		"ФИО: %s\nГруппа: %s\nДоступ к очереди: ",
+		user.Name, user.Group,
 	)
+	if user.QueueAccess {
+		profileStr.WriteString("✔️")
+	} else {
+		profileStr.WriteString("✖️")
+	}
 	if msg, ok := c.Get("msg").(tele.Editable); ok {
-		_, err := c.Bot().Edit(msg, profile, b.startMenu)
+		_, err := c.Bot().Edit(msg, profileStr.String(), b.startMenu)
 		return err
 	} else {
-		return c.Send(profile, b.startMenu)
+		return c.Send(profileStr.String(), b.startMenu)
 	}
 }
