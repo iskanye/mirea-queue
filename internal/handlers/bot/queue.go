@@ -236,7 +236,7 @@ func (b *Bot) showSubject(
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
-		sb.WriteString("\nОчередь не создана")
+		sb.WriteString("\nОчередь пуста")
 	} else if err == nil {
 		// Находим имена пользователей
 		for i, entry := range entries {
@@ -250,7 +250,7 @@ func (b *Bot) showSubject(
 				return err
 			}
 
-			sb.WriteString(fmt.Sprintf("\n%3d.  %s", i+1, user.Name))
+			fmt.Fprintf(&sb, "\n%3d.  %s", i+1, user.Name)
 		}
 
 		// Находим позицию текущего пользователя
