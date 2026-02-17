@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/iskanye/mirea-queue/internal/config"
 	"github.com/iskanye/mirea-queue/internal/interfaces"
@@ -38,6 +39,7 @@ type Bot struct {
 }
 
 func New(
+	log *slog.Logger,
 	cfg *config.Config,
 	groupBtnUnique string,
 	subjectBtnUnique string,
@@ -45,6 +47,9 @@ func New(
 	pref := tele.Settings{
 		Token:  cfg.Token,
 		Poller: &tele.LongPoller{Timeout: cfg.BotTimeout},
+		OnError: func(err error, c tele.Context) {
+			log.Error("FATAL ERROR", slog.String("err", err.Error()))
+		},
 	}
 
 	b, err := tele.NewBot(pref)

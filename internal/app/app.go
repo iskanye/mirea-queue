@@ -53,7 +53,7 @@ func New(
 	admin := admin.New(log, cfg)
 	schedule := schedule.New(log, groupRange, client, client)
 
-	bot, ctx := bot.New(cfg, groupBtnUnique, subjectBtnUnique)
+	bot, ctx := bot.New(log, cfg, groupBtnUnique, subjectBtnUnique)
 	handlers := botHandlers.New(log, ctx,
 		bot.StartMenu(),
 		bot.SubjectMenu(),
