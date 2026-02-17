@@ -5,6 +5,7 @@ on:
     workflows: [Run Tests]
     types:
       - completed
+    branches: [main]
   workflow_dispatch:
 
 jobs:
