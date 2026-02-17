@@ -146,8 +146,13 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 
 		// Проверяем, есть ли уже очередь по этому предмету
 		length, err := b.queueService.Len(b.ctx, queue)
-		if err == nil {
-			fmt.Fprintf(&btnText, "(Чел. в очереди: %d)", length)
+		if err != nil {
+			return err
+		}
+		if length != 0 {
+			fmt.Fprintf(&btnText, "🟩 (Чел. в очереди: %d) ", length)
+		} else {
+			btnText.WriteString("🟥 (Нет очереди) ")
 		}
 		btnText.WriteString(subjects[i])
 

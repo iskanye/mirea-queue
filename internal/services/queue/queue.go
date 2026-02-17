@@ -317,9 +317,6 @@ func (q *Queue) Len(
 			slog.String("err", err.Error()),
 		)
 
-		if errors.Is(err, repositories.ErrNotFound) {
-			return 0, fmt.Errorf("%s: %w", op, services.ErrNotFound)
-		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
