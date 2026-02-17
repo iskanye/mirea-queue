@@ -296,3 +296,34 @@ func (q *Queue) Remove(
 
 	return nil
 }
+
+func (q *Queue) Len(
+	ctx context.Context,
+	queue models.Queue,
+) (int64, error) {
+	const op = "queue.Len"
+
+	log := q.log.With(
+		slog.String("op", op),
+		slog.String("queue_group", queue.Group),
+		slog.String("queue_subject", queue.Subject),
+	)
+
+	log.Info("Trying to get queue length")
+
+	length, err := q.queueLength.Len(ctx, queue)
+	if err != nil {
+		log.Error("Failed to get queue length",
+			slog.String("err", err.Error()),
+		)
+
+		if errors.Is(err, repositories.ErrNotFound) {
+			return 0, fmt.Errorf("%s: %w", op, services.ErrNotFound)
+		}
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("Successfully got")
+
+	return length, nil
+}

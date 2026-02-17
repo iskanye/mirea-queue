@@ -145,11 +145,9 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 		}
 
 		// Проверяем, есть ли уже очередь по этому предмету
-		_, err := b.queueService.Range(b.ctx, queue)
+		length, err := b.queueService.Len(b.ctx, queue)
 		if err == nil {
-			btnText.WriteString("🟩 ")
-		} else if errors.Is(err, services.ErrNotFound) {
-			btnText.WriteString("🟥 ")
+			fmt.Fprintf(&btnText, "(Чел. в очереди: %d)", length)
 		}
 		btnText.WriteString(subjects[i])
 
@@ -232,7 +230,7 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString("Очередь " + queue.Key())
+	sb.WriteString(queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {

@@ -61,6 +61,11 @@ type QueueService interface {
 		queue models.Queue,
 		entry models.QueueEntry,
 	) error
+	// Получает длину очереди
+	Len(
+		ctx context.Context,
+		queue models.Queue,
+	) (int64, error)
 }
 
 // Сервис пользователей
