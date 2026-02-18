@@ -150,11 +150,18 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 			return err
 		}
 		if length != 0 {
-			fmt.Fprintf(&btnText, "🟩 (Чел. в очереди: %d) ", length)
+			fmt.Fprintf(&btnText, "🟩 (В очереди: %d) ", length)
 		} else {
-			btnText.WriteString("🟥 (Нет очереди) ")
+			btnText.WriteString("🟥 (Очереди нет) ")
 		}
-		btnText.WriteString(subjects[i])
+
+		// Обрезаем слишком длинное название дисциплины
+		subjectSlice := []rune(subjects[i])
+		if len(subjectSlice) >= 25 {
+			btnText.WriteString(string(subjectSlice[:22]) + "...")
+		} else {
+			btnText.WriteString(subjects[i])
+		}
 
 		btns[i] = subjectMarkup.Data(btnText.String(), b.subjectBtnUnique, data)
 		btnText.Reset()
@@ -253,20 +260,24 @@ func (b *Bot) showSubject(
 				return err
 			}
 
-			fmt.Fprintf(&sb, "\n%3d.  %s", i+1, user.Name)
+			// Если это текущий пользователь, то выделяем жирным для видимости
+			if chatID == c.Chat().ID {
+				fmt.Fprintf(&sb, "\n*%3d.  %s*", i+1, user.Name)
+			} else {
+				fmt.Fprintf(&sb, "\n%3d.  %s", i+1, user.Name)
+			}
 		}
 
 		// Находим позицию текущего пользователя
 		pos, err := b.queueService.Pos(b.ctx, queue, entry)
 
-		msgText := fmt.Sprintf("\nВаша текущая позиция в очереди - %d", pos)
-		if errors.Is(err, services.ErrNotFound) {
-			msgText = "\nВы не записаны в очередь"
-		} else if err != nil {
+		if err == nil {
+			fmt.Fprintf(&sb, "\nВы %d в очереди", pos)
+		} else if errors.Is(err, services.ErrNotFound) {
+			sb.WriteString("\nВы не записаны в очередь")
+		} else {
 			return err
 		}
-
-		sb.WriteString(msgText)
 	} else {
 		return err
 	}
@@ -276,7 +287,7 @@ func (b *Bot) showSubject(
 		menu = b.subjectAdminMenu
 	}
 
-	err = c.Edit(sb.String(), menu)
+	err = c.Edit(sb.String(), menu, telebot.ModeMarkdown)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}
