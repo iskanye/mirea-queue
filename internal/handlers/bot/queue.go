@@ -118,7 +118,12 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 
 // Выбрать предмет
 func (b *Bot) ChooseSubject(c telebot.Context) error {
+	// Данные о пользователе
 	user := c.Get("user").(models.User)
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
 	groups, err := b.scheduleService.GetGroups(b.ctx, user.Group)
 	if err != nil {
 		return err
@@ -144,24 +149,28 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 			Subject: data,
 		}
 
+		// Проверяем находится ли в данной очереди человек
+		_, err := b.queueService.Pos(b.ctx, queue, entry)
+		if errors.Is(err, services.ErrNotFound) {
+			btnText.WriteRune('🟥')
+		} else if err == nil {
+			btnText.WriteRune('🟩')
+		} else {
+			return err
+		}
+
 		// Проверяем, есть ли уже очередь по этому предмету
 		length, err := b.queueService.Len(b.ctx, queue)
 		if err != nil {
 			return err
 		}
-		if length != 0 {
-			fmt.Fprintf(&btnText, "🟩 (В очереди: %d) ", length)
-		} else {
-			btnText.WriteString("🟥 (Очереди нет) ")
-		}
 
-		// Обрезаем слишком длинное название дисциплины
-		subjectSlice := []rune(subjects[i])
-		if len(subjectSlice) >= 25 {
-			btnText.WriteString(string(subjectSlice[:22]) + "...")
+		if length != 0 {
+			fmt.Fprintf(&btnText, " (%d чел.) ", length)
 		} else {
-			btnText.WriteString(subjects[i])
+			btnText.WriteString(" (Пусто) ")
 		}
+		btnText.WriteString(subjects[i])
 
 		btns[i] = subjectMarkup.Data(btnText.String(), b.subjectBtnUnique, data)
 		btnText.Reset()
@@ -185,10 +194,6 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	queue := models.Queue{
 		Group:   user.Group,
 		Subject: subject,
-	}
-
-	entry := models.QueueEntry{
-		ChatID: fmt.Sprint(c.Chat().ID),
 	}
 
 	err = b.queueService.SaveToCache(b.ctx, c.Chat().ID, queue)
