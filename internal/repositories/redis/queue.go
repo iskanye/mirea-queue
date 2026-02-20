@@ -123,9 +123,6 @@ func (s *Storage) Len(
 
 	len, err := s.cl.LLen(ctx, queue.Key()).Result()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return 0, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
-		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 

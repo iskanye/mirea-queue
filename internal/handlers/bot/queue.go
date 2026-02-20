@@ -118,7 +118,12 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 
 // Выбрать предмет
 func (b *Bot) ChooseSubject(c telebot.Context) error {
+	// Данные о пользователе
 	user := c.Get("user").(models.User)
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
 	groups, err := b.scheduleService.GetGroups(b.ctx, user.Group)
 	if err != nil {
 		return err
@@ -144,12 +149,26 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 			Subject: data,
 		}
 
+		// Проверяем находится ли в данной очереди человек
+		_, err := b.queueService.Pos(b.ctx, queue, entry)
+		if errors.Is(err, services.ErrNotFound) {
+			btnText.WriteRune('🟥')
+		} else if err == nil {
+			btnText.WriteRune('🟩')
+		} else {
+			return err
+		}
+
 		// Проверяем, есть ли уже очередь по этому предмету
-		_, err := b.queueService.Range(b.ctx, queue)
-		if err == nil {
-			btnText.WriteString("✅ ")
-		} else if errors.Is(err, services.ErrNotFound) {
-			btnText.WriteString("❌ ")
+		length, err := b.queueService.Len(b.ctx, queue)
+		if err != nil {
+			return err
+		}
+
+		if length != 0 {
+			fmt.Fprintf(&btnText, " (%d чел.) ", length)
+		} else {
+			btnText.WriteString(" (Пусто) ")
 		}
 		btnText.WriteString(subjects[i])
 
@@ -175,10 +194,6 @@ func (b *Bot) ChooseSubject(c telebot.Context) error {
 	queue := models.Queue{
 		Group:   user.Group,
 		Subject: subject,
-	}
-
-	entry := models.QueueEntry{
-		ChatID: fmt.Sprint(c.Chat().ID),
 	}
 
 	err = b.queueService.SaveToCache(b.ctx, c.Chat().ID, queue)
@@ -232,11 +247,11 @@ func (b *Bot) showSubject(
 	entry models.QueueEntry,
 ) error {
 	var sb strings.Builder
-	sb.WriteString("Очередь " + queue.Key())
+	sb.WriteString(queue.Key())
 
 	entries, err := b.queueService.Range(b.ctx, queue)
 	if errors.Is(err, services.ErrNotFound) {
-		sb.WriteString("\nОчередь не создана")
+		sb.WriteString("\nОчередь пуста")
 	} else if err == nil {
 		// Находим имена пользователей
 		for i, entry := range entries {
@@ -250,20 +265,24 @@ func (b *Bot) showSubject(
 				return err
 			}
 
-			sb.WriteString(fmt.Sprintf("\n%3d.  %s", i+1, user.Name))
+			// Если это текущий пользователь, то выделяем жирным для видимости
+			if chatID == c.Chat().ID {
+				fmt.Fprintf(&sb, "\n*%3d.  %s*", i+1, user.Name)
+			} else {
+				fmt.Fprintf(&sb, "\n%3d.  %s", i+1, user.Name)
+			}
 		}
 
 		// Находим позицию текущего пользователя
 		pos, err := b.queueService.Pos(b.ctx, queue, entry)
 
-		msgText := fmt.Sprintf("\nВаша текущая позиция в очереди - %d", pos)
-		if errors.Is(err, services.ErrNotFound) {
-			msgText = "\nВы не записаны в очередь"
-		} else if err != nil {
+		if err == nil {
+			fmt.Fprintf(&sb, "\nВы %d в очереди", pos)
+		} else if errors.Is(err, services.ErrNotFound) {
+			sb.WriteString("\nВы не записаны в очередь")
+		} else {
 			return err
 		}
-
-		sb.WriteString(msgText)
 	} else {
 		return err
 	}
@@ -273,7 +292,7 @@ func (b *Bot) showSubject(
 		menu = b.subjectAdminMenu
 	}
 
-	err = c.Edit(sb.String(), menu)
+	err = c.Edit(sb.String(), menu, telebot.ModeMarkdown)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}
