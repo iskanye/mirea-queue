@@ -196,39 +196,15 @@ func (q *Queue) LetAhead(
 
 	log.Info("Trying to let someone go ahead in queue")
 
-	pos, err := q.queuePos.GetPosition(ctx, queue, entry)
+	err := q.queueSwap.LetAhead(ctx, queue, entry)
 	if err != nil {
-		log.Error("Failed to get entry position",
+		log.Error("Failed to let someone go ahead",
 			slog.String("err", err.Error()),
 		)
 
 		if errors.Is(err, repositories.ErrNotFound) {
 			return fmt.Errorf("%s: %w", op, services.ErrNotFound)
 		}
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	len, err := q.queueLength.Len(ctx, queue)
-	if err != nil {
-		// Нет смысла проверять на ErrNotFound, так как
-		// на данный момент мы уже получили позицию в очереди
-		log.Error("Failed to get queue length",
-			slog.String("err", err.Error()),
-		)
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	if pos == len {
-		// Пользователь в конце очереди - не сможет пропустить
-		log.Warn("User is at the queue end")
-		return fmt.Errorf("%s: %w", op, services.ErrQueueEnd)
-	}
-
-	err = q.queueSwap.LetAhead(ctx, queue, entry)
-	if err != nil {
-		log.Error("Failed to let someone go ahead",
-			slog.String("err", err.Error()),
-		)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

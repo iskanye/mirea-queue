@@ -107,9 +107,6 @@ func (b *Bot) LetAhead(c telebot.Context) error {
 		if errors.Is(err, services.ErrNotFound) {
 			return c.Send("Вы не записаны в очередь")
 		}
-		if errors.Is(err, services.ErrQueueEnd) {
-			return c.Send("Вы последний в очереди")
-		}
 		return err
 	}
 

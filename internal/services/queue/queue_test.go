@@ -339,8 +339,6 @@ func TestQueueLetAhead_Success(t *testing.T) {
 		ChatID: gofakeit.ID(),
 	}
 
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(2, nil)
-	queueLength.EXPECT().Len(ctx, subjectQueue).Return(5, nil)
 	queueSwap.EXPECT().LetAhead(ctx, subjectQueue, entry).Return(nil)
 
 	err := service.LetAhead(ctx, subjectQueue, entry)
@@ -359,33 +357,13 @@ func TestQueueLetAhead_NotFound(t *testing.T) {
 		ChatID: gofakeit.ID(),
 	}
 
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(0, repositories.ErrNotFound)
+	queueSwap.EXPECT().LetAhead(ctx, subjectQueue, entry).Return(repositories.ErrNotFound)
 
 	err := service.LetAhead(ctx, subjectQueue, entry)
 	require.ErrorIs(t, err, services.ErrNotFound)
 }
 
-func TestQueueLetAhead_QueueEnd(t *testing.T) {
-	service, ctx := newService(t)
-
-	subjectQueue := models.Queue{
-		Group:   gofakeit.ID(),
-		Subject: gofakeit.Noun(),
-	}
-
-	entry := models.QueueEntry{
-		ChatID: gofakeit.ID(),
-	}
-
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(5, nil)
-	queueLength.EXPECT().Len(ctx, subjectQueue).Return(5, nil)
-
-	err := service.LetAhead(ctx, subjectQueue, entry)
-	require.NotEmpty(t, err)
-	assert.ErrorIs(t, err, services.ErrQueueEnd)
-}
-
-func TestQueueLetAhead_Failure1(t *testing.T) {
+func TestQueueLetAhead_Failure(t *testing.T) {
 	service, ctx := newService(t)
 
 	subjectQueue := models.Queue{
@@ -398,47 +376,6 @@ func TestQueueLetAhead_Failure1(t *testing.T) {
 	}
 
 	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(0, expectedErr)
-
-	err := service.LetAhead(ctx, subjectQueue, entry)
-	require.ErrorIs(t, err, expectedErr)
-}
-
-func TestQueueLetAhead_Failure2(t *testing.T) {
-	service, ctx := newService(t)
-
-	subjectQueue := models.Queue{
-		Group:   gofakeit.ID(),
-		Subject: gofakeit.Noun(),
-	}
-
-	entry := models.QueueEntry{
-		ChatID: gofakeit.ID(),
-	}
-
-	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(1, nil)
-	queueLength.EXPECT().Len(ctx, subjectQueue).Return(0, expectedErr)
-
-	err := service.LetAhead(ctx, subjectQueue, entry)
-	require.ErrorIs(t, err, expectedErr)
-}
-
-func TestQueueLetAhead_Failure3(t *testing.T) {
-	service, ctx := newService(t)
-
-	subjectQueue := models.Queue{
-		Group:   gofakeit.ID(),
-		Subject: gofakeit.Noun(),
-	}
-
-	entry := models.QueueEntry{
-		ChatID: gofakeit.ID(),
-	}
-
-	expectedErr := errors.New("внезапная ошибка на стороне базы данных")
-	queuePos.EXPECT().GetPosition(ctx, subjectQueue, entry).Return(2, nil)
-	queueLength.EXPECT().Len(ctx, subjectQueue).Return(5, nil)
 	queueSwap.EXPECT().LetAhead(ctx, subjectQueue, entry).Return(expectedErr)
 
 	err := service.LetAhead(ctx, subjectQueue, entry)

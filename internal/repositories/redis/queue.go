@@ -34,7 +34,6 @@ func (s *Storage) Push(
 			// Проходимся по списку позиций, пока не находим пустое место
 			for _, e := range entries {
 				if e.Score != float64(pos) {
-					entry.Position = pos
 					break
 				}
 				pos++
@@ -170,7 +169,7 @@ func (s *Storage) LetAhead(
 
 	pos, err := s.cl.ZRank(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
-		// Списка нет или элемента нет в списке
+		// Элемента нет в списке
 		if errors.Is(err, redis.Nil) {
 			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
 		}
@@ -191,6 +190,7 @@ func (s *Storage) LetAhead(
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
+
 		_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0].Member.(string)).Result()
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
