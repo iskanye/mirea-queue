@@ -19,14 +19,33 @@ func (s *Storage) Push(
 
 	// Пытаемся найти данный айди в очереди
 	// Если есть, значит пользователь уже есть в очереди
-	_, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
+	_, err := s.cl.ZRank(ctx, queue.Key(), entry.ChatID).Result()
 	if err == nil {
 		return fmt.Errorf("%s: %w", op, repositories.ErrAlreadyInQueue)
 	} else if !errors.Is(err, redis.Nil) {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = s.cl.RPush(ctx, queue.Key(), entry.ChatID).Result()
+	if entry.Position == 0 {
+		// Ищем последнюю позицию на которую можно поставить элемент
+		entries, err := s.cl.ZRangeWithScores(ctx, queue.Key(), 0, -1).Result()
+		if err == nil {
+			pos := 1
+			// Проходимся по списку позиций, пока не находим пустое место
+			for _, e := range entries {
+				if e.Score != float64(pos) {
+					entry.Position = pos
+					break
+				}
+				pos++
+			}
+			entry.Position = pos
+		} else {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	_, err = s.cl.ZAdd(ctx, queue.Key(), entry.ToRedis()).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -40,7 +59,7 @@ func (s *Storage) Pop(
 ) (models.QueueEntry, error) {
 	const op = "redis.Pop"
 
-	student, err := s.cl.LPop(ctx, queue.Key()).Result()
+	student, err := s.cl.ZPopMin(ctx, queue.Key()).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return models.QueueEntry{}, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
@@ -48,8 +67,21 @@ func (s *Storage) Pop(
 		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	// Уменьшаем позиции в очереди на 1
+	entries, err := s.cl.ZRange(ctx, queue.Key(), 0, -1).Result()
+	if err != nil {
+		return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for _, entry := range entries {
+		_, err := s.cl.ZIncrBy(ctx, queue.Key(), -1, entry).Result()
+		if err != nil {
+			return models.QueueEntry{}, fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
 	return models.QueueEntry{
-		ChatID: student,
+		ChatID: student[0].Member.(string),
 	}, nil
 }
 
@@ -60,7 +92,7 @@ func (s *Storage) Range(
 ) ([]models.QueueEntry, error) {
 	const op = "redis.Range"
 
-	students, err := s.cl.LRange(ctx, queue.Key(), 0, n-1).Result()
+	students, err := s.cl.ZRangeWithScores(ctx, queue.Key(), 0, n-1).Result()
 	// Очередь не создана
 	if len(students) == 0 {
 		return nil, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
@@ -72,7 +104,8 @@ func (s *Storage) Range(
 	entries := make([]models.QueueEntry, 0, n)
 	for _, student := range students {
 		entries = append(entries, models.QueueEntry{
-			ChatID: student,
+			Position: int(student.Score),
+			ChatID:   student.Member.(string),
 		})
 	}
 
@@ -103,7 +136,7 @@ func (s *Storage) GetPosition(
 ) (int64, error) {
 	const op = "redis.GetPosition"
 
-	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
+	pos, err := s.cl.ZScore(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return 0, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
@@ -111,8 +144,7 @@ func (s *Storage) GetPosition(
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Отсчёт позиции должен начинаться с 1
-	return pos + 1, nil
+	return int64(pos), nil
 }
 
 func (s *Storage) Len(
@@ -121,7 +153,7 @@ func (s *Storage) Len(
 ) (int64, error) {
 	const op = "redis.Len"
 
-	len, err := s.cl.LLen(ctx, queue.Key()).Result()
+	len, err := s.cl.ZCard(ctx, queue.Key()).Result()
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -136,7 +168,7 @@ func (s *Storage) LetAhead(
 ) error {
 	const op = "redis.LetAhead"
 
-	pos, err := s.cl.LPos(ctx, queue.Key(), entry.ChatID, redis.LPosArgs{}).Result()
+	pos, err := s.cl.ZRank(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		// Списка нет или элемента нет в списке
 		if errors.Is(err, redis.Nil) {
@@ -145,23 +177,25 @@ func (s *Storage) LetAhead(
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	ahead, err := s.cl.LIndex(ctx, queue.Key(), pos+1).Result()
-	if err != nil {
+	ahead, err := s.cl.ZRangeWithScores(ctx, queue.Key(), pos+1, pos+1).Result()
+	if errors.Is(err, redis.Nil) {
 		// Элемент не найден так как изначальный элемент в конце списка
-		if errors.Is(err, redis.Nil) {
-			return fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
+		// или перед ним дырка => можем увеличить ранг без последствий
+		_, err := s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
 		}
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	// Свапаем элементы
-	_, err = s.cl.LSet(ctx, queue.Key(), pos, ahead).Result()
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	_, err = s.cl.LSet(ctx, queue.Key(), pos+1, entry.ChatID).Result()
-	if err != nil {
+	} else if err == nil {
+		// Элемент спереди найден => меняем им ранги
+		_, err := s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+		_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0].Member.(string)).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	} else {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -175,7 +209,7 @@ func (s *Storage) Remove(
 ) error {
 	const op = "redis.Remove"
 
-	_, err := s.cl.LRem(ctx, queue.Key(), 1, entry.ChatID).Result()
+	_, err := s.cl.ZRem(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
