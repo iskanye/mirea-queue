@@ -29,18 +29,32 @@ func (s *Storage) Push(
 	if entry.Position == 0 {
 		// Ищем последнюю позицию на которую можно поставить элемент
 		entries, err := s.cl.ZRangeWithScores(ctx, queue.Key(), 0, -1).Result()
-		if err == nil {
-			pos := 1
-			// Проходимся по списку позиций, пока не находим пустое место
-			for _, e := range entries {
-				if e.Score != float64(pos) {
-					break
-				}
-				pos++
-			}
-			entry.Position = pos
-		} else {
+		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		pos := 1
+		// Проходимся по списку позиций, пока не находим пустое место
+		for _, e := range entries {
+			if e.Score != float64(pos) {
+				break
+			}
+			pos++
+		}
+		entry.Position = pos
+	} else {
+		// Проверяем что на данное место можно встать
+		entry, err := s.cl.ZRangeByScore(ctx, queue.Key(), &redis.ZRangeBy{
+			Min: fmt.Sprint(entry.Position),
+			Max: fmt.Sprint(entry.Position),
+		}).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		if len(entry) != 0 {
+			// На данное место уже можно встать => неверно выбрана позиция
+			return fmt.Errorf("%s: %w", op, repositories.ErrPlaceTaken)
 		}
 	}
 
@@ -176,7 +190,10 @@ func (s *Storage) LetAhead(
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	ahead, err := s.cl.ZRangeWithScores(ctx, queue.Key(), pos+1, pos+1).Result()
+	ahead, err := s.cl.ZRangeByScore(ctx, queue.Key(), &redis.ZRangeBy{
+		Min: fmt.Sprint(pos + 1),
+		Max: fmt.Sprint(pos + 1),
+	}).Result()
 	if errors.Is(err, redis.Nil) {
 		// Элемент не найден так как изначальный элемент в конце списка
 		// или перед ним дырка => можем увеличить ранг без последствий
@@ -184,18 +201,18 @@ func (s *Storage) LetAhead(
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
-	} else if err == nil {
-		// Элемент спереди найден => меняем им ранги
-		_, err := s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
-		if err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
+	} else if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 
-		_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0].Member.(string)).Result()
-		if err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-	} else {
+	// Элемент спереди найден => меняем им ранги
+	_, err = s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0]).Result()
+	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

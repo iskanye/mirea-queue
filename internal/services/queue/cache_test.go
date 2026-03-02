@@ -97,7 +97,7 @@ func TestGetFromCache_CacheMiss(t *testing.T) {
 
 	chatID := gofakeit.Int64()
 
-	cache.EXPECT().Get(ctx, fmt.Sprint(chatID)).Return("", repositories.ErrCacheMiss)
+	cache.EXPECT().Get(ctx, fmt.Sprint(chatID)).Return("", repositories.ErrNotFound)
 
 	queue, err := service.GetFromCache(ctx, chatID)
 	require.ErrorIs(t, err, services.ErrNotFound)

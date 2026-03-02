@@ -58,7 +58,7 @@ func (q *Queue) GetFromCache(
 			slog.String("err", err.Error()),
 		)
 
-		if errors.Is(err, repositories.ErrCacheMiss) {
+		if errors.Is(err, repositories.ErrNotFound) {
 			return models.Queue{}, fmt.Errorf("%s: %w", op, services.ErrNotFound)
 		}
 		return models.Queue{}, fmt.Errorf("%s: %w", op, err)

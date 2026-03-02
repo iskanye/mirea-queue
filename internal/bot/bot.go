@@ -16,15 +16,16 @@ type Bot struct {
 	b *tele.Bot
 
 	// Кнопки
-	editBtn     *tele.Btn
-	chooseBtn   *tele.Btn
-	returnBtn   *tele.Btn
-	refreshBtn  *tele.Btn
-	pushBtn     *tele.Btn
-	letAheadBtn *tele.Btn
-	popBtn      *tele.Btn
-	clearBtn    *tele.Btn
-	removeBtn   *tele.Btn
+	editBtn         *tele.Btn
+	chooseBtn       *tele.Btn
+	returnBtn       *tele.Btn
+	refreshBtn      *tele.Btn
+	pushBtn         *tele.Btn
+	pushPriorityBtn *tele.Btn
+	letAheadBtn     *tele.Btn
+	popBtn          *tele.Btn
+	clearBtn        *tele.Btn
+	removeBtn       *tele.Btn
 
 	// Менюшки
 	startMenu        *tele.ReplyMarkup
@@ -65,6 +66,7 @@ func New(
 	returnBtn := markup.Data("Назад", "return")
 	refreshBtn := markup.Data("Обновить", "update")
 	pushBtn := markup.Data("Записаться", "push")
+	pushPriorityBtn := markup.Data("Записаться на место", "push-priority")
 	popBtn := markup.Data("Позвать на сдачу", "pop")
 	clearBtn := markup.Data("Очистить очередь", "clear")
 	letAheadBtn := markup.Data("Пропустить в очереди", "let-ahead")
@@ -81,6 +83,7 @@ func New(
 	subjectMenu.Inline(
 		markup.Row(returnBtn, refreshBtn),
 		markup.Row(pushBtn),
+		markup.Row(pushPriorityBtn),
 		markup.Row(letAheadBtn),
 		markup.Row(removeBtn),
 	)
@@ -90,6 +93,7 @@ func New(
 	subjectAdminMenu.Inline(
 		markup.Row(returnBtn, refreshBtn),
 		markup.Row(pushBtn),
+		markup.Row(pushPriorityBtn),
 		markup.Row(letAheadBtn),
 		markup.Row(removeBtn),
 		markup.Row(popBtn),
@@ -99,15 +103,16 @@ func New(
 	return &Bot{
 		b: b,
 
-		editBtn:     &editBtn,
-		chooseBtn:   &chooseBtn,
-		returnBtn:   &returnBtn,
-		refreshBtn:  &refreshBtn,
-		pushBtn:     &pushBtn,
-		letAheadBtn: &letAheadBtn,
-		popBtn:      &popBtn,
-		clearBtn:    &clearBtn,
-		removeBtn:   &removeBtn,
+		editBtn:         &editBtn,
+		chooseBtn:       &chooseBtn,
+		returnBtn:       &returnBtn,
+		refreshBtn:      &refreshBtn,
+		pushBtn:         &pushBtn,
+		pushPriorityBtn: &pushPriorityBtn,
+		letAheadBtn:     &letAheadBtn,
+		popBtn:          &popBtn,
+		clearBtn:        &clearBtn,
+		removeBtn:       &removeBtn,
 
 		startMenu:        startMenu,
 		subjectMenu:      subjectMenu,
@@ -162,6 +167,7 @@ func (b *Bot) Register(
 		// Требует получить очередь из кеша
 		authorized.Handle(b.refreshBtn, handlers.Refresh, middlewares.GetQueue)
 		authorized.Handle(b.pushBtn, handlers.Push, middlewares.GetQueue)
+		authorized.Handle(b.pushPriorityBtn, handlers.PushPriority, middlewares.GetQueue)
 		authorized.Handle(b.letAheadBtn, handlers.LetAhead, middlewares.GetQueue)
 		authorized.Handle(b.removeBtn, handlers.Remove, middlewares.GetQueue)
 		authorized.Handle(b.popBtn, handlers.Pop, middlewares.GetQueue)

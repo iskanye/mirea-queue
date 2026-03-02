@@ -18,6 +18,7 @@ type BotHandlers interface {
 	ChooseSubjectButton(telebot.Context) error
 	Refresh(telebot.Context) error
 	Push(telebot.Context) error
+	PushPriority(telebot.Context) error
 	Pop(telebot.Context) error
 	LetAhead(telebot.Context) error
 	Clear(telebot.Context) error

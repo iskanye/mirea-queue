@@ -40,6 +40,58 @@ func (b *Bot) Push(c telebot.Context) error {
 	return b.showSubject(c, queue, entry)
 }
 
+// Пушает в очередь с указанием на конкретное место
+func (b *Bot) PushPriority(c telebot.Context) error {
+	queue := c.Get("queue").(models.Queue)
+
+	entry := models.QueueEntry{
+		ChatID: fmt.Sprint(c.Chat().ID),
+	}
+
+	// Пробуем пока не получится встать в очередь
+getPos:
+	if err := c.Send("Введите на какую позицию в очереди хотите встать"); err != nil {
+		return nil
+	}
+
+	// Получаем от пользователя ввод числа
+	if err := b.dialogue(c, func(ch <-chan string, c telebot.Context) error {
+		for pos := range ch {
+			if posInt, err := strconv.Atoi(pos); err == nil {
+				entry.Position = posInt
+				break
+			}
+
+			if err := c.Send("Невозможно привести к числу, попробуйте снова"); err != nil {
+				return nil
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	err := b.queueService.Push(b.ctx, queue, entry)
+	if err != nil {
+		if errors.Is(err, services.ErrAlreadyInQueue) {
+			return c.Send("Вы уже в очереди")
+		}
+		if errors.Is(err, services.ErrPlaceTaken) {
+			// Если место занято продолжаем цикл, пока пользователь не введёт
+			// доступную позицию в очереди
+			err = c.Send("Место уже занято")
+			if err != nil {
+				return err
+			}
+			goto getPos
+		}
+
+		return err
+	}
+
+	return b.showSubject(c, queue, entry)
+}
+
 // Попает из очереди
 func (b *Bot) Pop(c telebot.Context) error {
 	queue := c.Get("queue").(models.Queue)
@@ -251,7 +303,7 @@ func (b *Bot) showSubject(
 		sb.WriteString("\nОчередь пуста")
 	} else if err == nil {
 		// Находим имена пользователей
-		for i, entry := range entries {
+		for _, entry := range entries {
 			chatID, err := strconv.ParseInt(entry.ChatID, 10, 64)
 			if err != nil {
 				return err
@@ -264,9 +316,9 @@ func (b *Bot) showSubject(
 
 			// Если это текущий пользователь, то выделяем жирным для видимости
 			if chatID == c.Chat().ID {
-				fmt.Fprintf(&sb, "\n*%3d.  %s*", i+1, user.Name)
+				fmt.Fprintf(&sb, "\n*%3d.  %s*", entry.Position, user.Name)
 			} else {
-				fmt.Fprintf(&sb, "\n%3d.  %s", i+1, user.Name)
+				fmt.Fprintf(&sb, "\n%3d.  %s", entry.Position, user.Name)
 			}
 		}
 

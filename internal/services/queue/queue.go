@@ -79,6 +79,9 @@ func (q *Queue) Push(
 		if errors.Is(err, repositories.ErrAlreadyInQueue) {
 			return fmt.Errorf("%s: %w", op, services.ErrAlreadyInQueue)
 		}
+		if errors.Is(err, repositories.ErrPlaceTaken) {
+			return fmt.Errorf("%s: %w", op, services.ErrPlaceTaken)
+		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
