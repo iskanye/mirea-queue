@@ -57,12 +57,12 @@ getPos:
 	// Получаем от пользователя ввод числа
 	if err := b.dialogue(c, func(ch <-chan string, c telebot.Context) error {
 		for pos := range ch {
-			if posInt, err := strconv.Atoi(pos); err == nil {
+			if posInt, err := strconv.Atoi(pos); err == nil && posInt > 0 {
 				entry.Position = posInt
 				break
 			}
 
-			if err := c.Send("Невозможно привести к числу, попробуйте снова"); err != nil {
+			if err := c.Send("Невозможно привести к числу или неверное число, попробуйте снова"); err != nil {
 				return nil
 			}
 		}
@@ -149,7 +149,6 @@ func (b *Bot) Pop(c telebot.Context) error {
 // Пропускает следующего в очереди
 func (b *Bot) LetAhead(c telebot.Context) error {
 	queue := c.Get("queue").(models.Queue)
-
 	entry := models.QueueEntry{
 		ChatID: fmt.Sprint(c.Chat().ID),
 	}

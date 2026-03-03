@@ -106,12 +106,12 @@ func (s *Storage) Range(
 	const op = "redis.Range"
 
 	students, err := s.cl.ZRangeWithScores(ctx, queue.Key(), 0, n-1).Result()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 	// Очередь не создана
 	if len(students) == 0 {
 		return nil, fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	entries := make([]models.QueueEntry, 0, n)
@@ -181,7 +181,7 @@ func (s *Storage) LetAhead(
 ) error {
 	const op = "redis.LetAhead"
 
-	pos, err := s.cl.ZRank(ctx, queue.Key(), entry.ChatID).Result()
+	pos, err := s.cl.ZScore(ctx, queue.Key(), entry.ChatID).Result()
 	if err != nil {
 		// Элемента нет в списке
 		if errors.Is(err, redis.Nil) {
@@ -190,30 +190,34 @@ func (s *Storage) LetAhead(
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
+	// Проверяем есть ли на позиции выше элемент очереди
+	aheadPos := fmt.Sprint(pos + 1)
 	ahead, err := s.cl.ZRangeByScore(ctx, queue.Key(), &redis.ZRangeBy{
-		Min: fmt.Sprint(pos + 1),
-		Max: fmt.Sprint(pos + 1),
+		Min: aheadPos,
+		Max: aheadPos,
 	}).Result()
-	if errors.Is(err, redis.Nil) {
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if len(ahead) == 0 {
 		// Элемент не найден так как изначальный элемент в конце списка
 		// или перед ним дырка => можем увеличить ранг без последствий
 		_, err := s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
-	} else if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
+	} else {
+		// Элемент спереди найден => меняем им ранги
+		_, err = s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 
-	// Элемент спереди найден => меняем им ранги
-	_, err = s.cl.ZIncrBy(ctx, queue.Key(), 1, entry.ChatID).Result()
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0]).Result()
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		_, err = s.cl.ZIncrBy(ctx, queue.Key(), -1, ahead[0]).Result()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	return nil
