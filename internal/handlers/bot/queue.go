@@ -353,7 +353,8 @@ func (b *Bot) showSubject(
 		menu = b.subjectAdminMenu
 	}
 
-	err = c.Edit(sb.String(), menu, telebot.ModeMarkdown)
+	noKeyboardMenu := &telebot.ReplyMarkup{RemoveKeyboard: true}
+	err = c.Edit(sb.String(), menu, noKeyboardMenu, telebot.ModeMarkdown)
 	if err != nil && !errors.Is(err, telebot.ErrSameMessageContent) {
 		return err
 	}
