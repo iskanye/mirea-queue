@@ -35,7 +35,7 @@ func (s *Storage) Get(
 	val, err := s.cl.Get(ctx, key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return "", fmt.Errorf("%s: %w", op, repositories.ErrCacheMiss)
+			return "", fmt.Errorf("%s: %w", op, repositories.ErrNotFound)
 		}
 
 		return "", fmt.Errorf("%s: %w", op, err)

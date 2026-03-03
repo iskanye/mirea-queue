@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"strings"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type Queue struct {
@@ -23,5 +25,13 @@ func (q *Queue) Key() string {
 }
 
 type QueueEntry struct {
-	ChatID string
+	Position int
+	ChatID   string
+}
+
+func (e *QueueEntry) ToRedis() redis.Z {
+	return redis.Z{
+		Score:  float64(e.Position),
+		Member: e.ChatID,
+	}
 }
