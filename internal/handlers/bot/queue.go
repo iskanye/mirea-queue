@@ -43,32 +43,45 @@ func (b *Bot) Push(c telebot.Context) error {
 // Пушает в очередь с указанием на конкретное место
 func (b *Bot) PushPriority(c telebot.Context) error {
 	queue := c.Get("queue").(models.Queue)
-
 	entry := models.QueueEntry{
 		ChatID: fmt.Sprint(c.Chat().ID),
 	}
 
+	menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+	menu.Reply(
+		menu.Row(menu.Text("Отмена")),
+	)
+
 	// Пробуем пока не получится встать в очередь
 getPos:
-	if err := c.Send("Введите на какую позицию в очереди хотите встать"); err != nil {
+	if err := c.Send("Введите на какую позицию в очереди хотите встать", menu); err != nil {
 		return nil
 	}
 
 	// Получаем от пользователя ввод числа
+	cancelled := false
 	if err := b.dialogue(c, func(ch <-chan string, c telebot.Context) error {
 		for pos := range ch {
+			if pos == "Отмена" {
+				cancelled = true
+				break
+			}
 			if posInt, err := strconv.Atoi(pos); err == nil && posInt > 0 {
 				entry.Position = posInt
 				break
 			}
 
-			if err := c.Send("Невозможно привести к числу или неверное число, попробуйте снова"); err != nil {
+			if err := c.Send("Невозможно привести к числу или неверное число, попробуйте снова", menu); err != nil {
 				return nil
 			}
 		}
 		return nil
 	}); err != nil {
 		return err
+	}
+	// Ввод отменён
+	if cancelled {
+		return b.showSubject(c, queue, entry)
 	}
 
 	err := b.queueService.Push(b.ctx, queue, entry)
